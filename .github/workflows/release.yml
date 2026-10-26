@@ -1,0 +1,67 @@
+name: Release
+
+# On a v* tag: verify the bundle and versions, pack the server, and publish the
+# package file with its checksum on the GitHub release. Installs download that
+# file, so GitHub counts them (TR-1309).
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: Install
+        working-directory: server
+        run: npm ci
+      - name: Unit tests
+        working-directory: server
+        run: npm test
+      - name: Rebuild the bundle
+        working-directory: server
+        run: npm run build
+      - name: dist/ must match server/
+        run: |
+          if ! git diff --exit-code -- dist/index.js; then
+            echo "::error::dist/index.js is stale for this tag."
+            exit 1
+          fi
+      - name: Tag must match package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match package.json version $pkg"
+            exit 1
+          fi
+      - name: Install paths point at this release
+        run: node scripts/check-install-paths.mjs
+      - name: README has no unmeasured results
+        run: |
+          if grep -n 'RESULT-' README.md; then
+            echo "::error::README.md still has RESULT- markers; record the measurements first."
+            exit 1
+          fi
+      - name: Pack
+        run: |
+          file=$(npm pack --silent | tail -1)
+          sha256sum "$file" > checksums.txt
+          cat checksums.txt
+          echo "PACKAGE=$file" >> "$GITHUB_ENV"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" "$PACKAGE" checksums.txt --title "$GITHUB_REF_NAME" --generate-notes $flags
