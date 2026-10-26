@@ -52,6 +52,17 @@ jobs:
             echo "::error::README.md still has RESULT- markers; record the measurements first."
             exit 1
           fi
+          # A pre-release measurement build swaps the markers for the word
+          # "pending"; only another pre-release (a tag with a "-") may keep it.
+          case "$GITHUB_REF_NAME" in
+            *-*) ;;
+            *)
+              if grep -nw 'pending' README.md; then
+                echo "::error::README.md still has 'pending' markers; replace them with the measured results."
+                exit 1
+              fi
+              ;;
+          esac
       - name: Pack
         run: |
           file=$(npm pack --silent | tail -1)
