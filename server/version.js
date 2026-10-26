@@ -23,5 +23,19 @@ export function meetsMinimum(tag, min = MIN_ANALYZER_VERSION) {
   return !a.pre || b.pre;
 }
 
+/**
+ * Sort comparator over release tags (negative when a is older). A pre-release
+ * sorts before its release; two pre-releases of one version compare equal.
+ * Tags that do not parse are not meant to reach it (callers filter first).
+ */
+export function compareTags(a, b) {
+  const x = parse(a);
+  const y = parse(b);
+  for (let i = 0; i < 3; i++) {
+    if (x.core[i] !== y.core[i]) return x.core[i] - y.core[i];
+  }
+  return Number(!x.pre) - Number(!y.pre);
+}
+
 /** Release tags are v-prefixed; accept a bare "0.1.15" from settings too. */
 export const normalizeTag = (value) => (/^\d/.test(value) ? `v${value}` : value);

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MIN_ANALYZER_VERSION, meetsMinimum, normalizeTag } from "./version.js";
+import { MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
 
 test("the floor is 0.1.14, the first analyzer with forge --lang", () => {
   assert.equal(MIN_ANALYZER_VERSION, "0.1.14");
@@ -27,4 +27,10 @@ test("meetsMinimum rejects a tag it cannot parse", () => {
 test("normalizeTag adds the v that release tags carry", () => {
   assert.equal(normalizeTag("0.1.15"), "v0.1.15");
   assert.equal(normalizeTag("v0.1.15"), "v0.1.15");
+});
+
+test("compareTags orders numerically, not as strings, and puts a pre-release before its release", () => {
+  const sorted = ["v0.1.15", "v0.1.9", "v0.1.15-rc.1", "v0.2.0", "v0.1.100"].sort(compareTags);
+  assert.deepEqual(sorted, ["v0.1.9", "v0.1.15-rc.1", "v0.1.15", "v0.1.100", "v0.2.0"]);
+  assert.equal(compareTags("0.1.15", "v0.1.15"), 0);
 });

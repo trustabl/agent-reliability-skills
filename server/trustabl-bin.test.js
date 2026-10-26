@@ -131,10 +131,79 @@ test("latest is resolved once per process", async () => {
 
 test("a failed resolution is not memoized, so the next call retries", async () => {
   const home = tmp();
-  const cached = seedCache(home, "v0.1.15");
   const fetchImpl = fakeFetch({ ok: false, status: 403 }, latest("v0.1.15"));
   const ensure = createResolver({ env: { TRUSTABL_VERSION: "${TRUSTABL_VERSION}" }, home, fetchImpl, log: quiet });
+  // Nothing cached yet, so the failed lookup has no fallback and is an error.
   await assert.rejects(ensure(), /HTTP 403/);
+  const cached = seedCache(home, "v0.1.15");
   assert.equal(await ensure(), cached);
   assert.equal(fetchImpl.calls.length, 2);
+});
+
+// A fetch that fails the way Node's does with no network.
+const offline = () => {
+  const fn = async (url) => {
+    fn.calls.push(url);
+    throw Object.assign(new TypeError("fetch failed"), { cause: new Error("getaddrinfo ENOTFOUND api.github.com") });
+  };
+  fn.calls = [];
+  return fn;
+};
+
+test("offline with latest: falls back to the cached version, no download, and says so on stderr", async () => {
+  const home = tmp();
+  const cached = seedCache(home, "v0.1.15");
+  const fetchImpl = offline();
+  const logs = [];
+  const ensure = createResolver({ env: {}, home, fetchImpl, log: (m) => logs.push(m) });
+  assert.equal(await ensure(), cached);
+  assert.equal(fetchImpl.calls.length, 1, "only the release lookup was attempted");
+  assert.match(fetchImpl.calls[0], /releases\/latest$/);
+  assert.ok(
+    logs.some((m) => /could not reach GitHub \(fetch failed: getaddrinfo ENOTFOUND api\.github\.com\); using cached trustabl v0\.1\.15/.test(m)),
+    logs.join("\n"),
+  );
+});
+
+test("a non-OK latest lookup falls back to the newest cached version, compared as versions", async () => {
+  const home = tmp();
+  seedCache(home, "v0.1.9");
+  const newest = seedCache(home, "v0.1.15");
+  const ensure = createResolver({ env: {}, home, fetchImpl: fakeFetch({ ok: false, status: 403 }), log: quiet });
+  assert.equal(await ensure(), newest);
+});
+
+test("the fallback ignores a cached version below the floor and a folder without the binary", async () => {
+  const home = tmp();
+  seedCache(home, "v0.1.13");
+  fs.mkdirSync(path.join(home, ".trustabl-forge", "v0.1.20"), { recursive: true });
+  fs.mkdirSync(path.join(home, ".trustabl-forge", ".tmp-v0.1.30-1-abcd"), { recursive: true });
+  fs.mkdirSync(path.join(home, ".trustabl-forge", "notes"), { recursive: true });
+  const usable = seedCache(home, "v0.1.14");
+  const ensure = createResolver({ env: {}, home, fetchImpl: offline(), log: quiet });
+  assert.equal(await ensure(), usable);
+});
+
+test("offline with latest and nothing usable cached: a readable error that names the lookup, the cause and TRUSTABL_VERSION", async () => {
+  const home = tmp();
+  seedCache(home, "v0.1.13"); // below the floor, so not usable
+  const ensure = createResolver({ env: {}, home, fetchImpl: offline(), log: quiet });
+  await assert.rejects(ensure(), (err) => {
+    assert.match(err.message, /Could not look up the latest trustabl release/);
+    assert.match(err.message, /fetch failed: getaddrinfo ENOTFOUND api\.github\.com/);
+    assert.match(err.message, /no usable trustabl is cached/);
+    assert.match(err.message, /TRUSTABL_VERSION/);
+    return true;
+  });
+});
+
+test("a pinned TRUSTABL_VERSION never consults the release lookup or the fallback", async () => {
+  const home = tmp();
+  const newer = seedCache(home, "v0.1.20");
+  const pinned = seedCache(home, "v0.1.15");
+  const fetchImpl = offline();
+  const ensure = createResolver({ env: { TRUSTABL_VERSION: "v0.1.15" }, home, fetchImpl, log: quiet });
+  assert.equal(await ensure(), pinned);
+  assert.notEqual(pinned, newer);
+  assert.equal(fetchImpl.calls.length, 0);
 });

@@ -21816,6 +21816,14 @@ function meetsMinimum(tag, min = MIN_ANALYZER_VERSION) {
   }
   return !a.pre || b.pre;
 }
+function compareTags(a, b) {
+  const x = parse3(a);
+  const y = parse3(b);
+  for (let i = 0; i < 3; i++) {
+    if (x.core[i] !== y.core[i]) return x.core[i] - y.core[i];
+  }
+  return Number(!x.pre) - Number(!y.pre);
+}
 var normalizeTag = (value) => /^\d/.test(value) ? `v${value}` : value;
 
 // trustabl-bin.js
@@ -21869,14 +21877,20 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
   };
   async function latestTag() {
     const res = await fetchImpl(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: ghHeaders() });
-    if (!res.ok) {
-      throw new Error(
-        `Could not resolve the latest trustabl release (HTTP ${res.status}). Set TRUSTABL_VERSION to a tag (e.g. v${MIN_ANALYZER_VERSION}), or set GITHUB_TOKEN if you are rate-limited.`
-      );
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}${res.status === 403 || res.status === 429 ? ", possibly rate-limited" : ""}`);
     const tag = (await res.json()).tag_name;
-    if (!tag) throw new Error("The latest trustabl release has no tag_name.");
+    if (!tag) throw new Error("the latest release has no tag_name");
     return tag;
+  }
+  function newestCached(cacheRoot, exe) {
+    let names;
+    try {
+      names = fs3.readdirSync(cacheRoot);
+    } catch {
+      return null;
+    }
+    const usable = names.filter((name) => meetsMinimum(name) && fs3.existsSync(path3.join(cacheRoot, name, exe))).sort(compareTags);
+    return usable.length ? usable[usable.length - 1] : null;
   }
   async function download(url, dest) {
     const res = await fetchImpl(url, { headers: { ...ghHeaders(), Accept: "application/octet-stream" }, redirect: "follow" });
@@ -21934,8 +21948,24 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
       );
     }
     const target = platformTarget();
-    const version2 = pinned ?? await latestTag();
-    const finalDir = path3.join(home, ".trustabl-forge", version2);
+    const cacheRoot = path3.join(home, ".trustabl-forge");
+    let version2 = pinned;
+    if (!version2) {
+      try {
+        version2 = await latestTag();
+      } catch (err) {
+        const reason = err.cause?.message ? `${err.message}: ${err.cause.message}` : err.message;
+        const cached2 = newestCached(cacheRoot, target.exe);
+        if (!cached2) {
+          throw new Error(
+            `Could not look up the latest trustabl release (${reason}), and no usable trustabl is cached in ${cacheRoot}. Check your connection and retry, or set TRUSTABL_VERSION to a tag (e.g. v${MIN_ANALYZER_VERSION}) to pin a version. If you are rate-limited, set GITHUB_TOKEN.`
+          );
+        }
+        log2(`could not reach GitHub (${reason}); using cached trustabl ${cached2}`);
+        version2 = cached2;
+      }
+    }
+    const finalDir = path3.join(cacheRoot, version2);
     const bin = path3.join(finalDir, target.exe);
     if (fs3.existsSync(bin)) return bin;
     return install(version2, target, finalDir);
