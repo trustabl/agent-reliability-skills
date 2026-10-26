@@ -1,0 +1,111 @@
+name: Download history
+
+# Weekly snapshot of cumulative downloads of the trustabl-forge package file.
+# GitHub exposes only the current total per release asset (download_count),
+# with no history, so each run records one dated entry and commits it.
+# A same-day rerun replaces that day's entry; earlier entries are never changed.
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'       # weekly, Mondays 05:00 UTC
+  workflow_dispatch:           # run on demand to add an entry now
+
+permissions:
+  contents: write              # push the snapshot branch the PR is built from
+  pull-requests: write         # open/update the snapshot PR
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record cumulative downloads
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPO: ${{ github.repository }}
+          HISTORY_FILE: .github/stats/download-history.json
+          # Only the package file is an install; checksums.txt downloads are not.
+          PACKAGE_PREFIX: trustabl-forge-
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, urllib.request
+
+          repo   = os.environ["TARGET_REPO"]
+          path   = os.environ["HISTORY_FILE"]
+          prefix = os.environ["PACKAGE_PREFIX"]
+          token  = os.environ.get("GITHUB_TOKEN", "")
+
+          def api(url):
+              req = urllib.request.Request(url)
+              req.add_header("Accept", "application/vnd.github+json")
+              req.add_header("X-GitHub-Api-Version", "2022-11-28")
+              req.add_header("User-Agent", "trustabl-forge-download-history")
+              if token:
+                  req.add_header("Authorization", "Bearer " + token)
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  return json.load(r)
+
+          releases, page = {}, 1
+          while True:
+              rels = api("https://api.github.com/repos/%s/releases?per_page=100&page=%d" % (repo, page))
+              if not rels:
+                  break
+              for rel in rels:
+                  if rel.get("draft"):
+                      continue
+                  releases[rel["tag_name"]] = sum(
+                      a.get("download_count", 0)
+                      for a in rel.get("assets", [])
+                      if a.get("name", "").startswith(prefix) and a["name"].endswith(".tgz")
+                  )
+              if len(rels) < 100:
+                  break
+              page += 1
+
+          day = datetime.date.today().isoformat()   # YYYY-MM-DD (UTC on the runner)
+
+          if os.path.exists(path):
+              with open(path) as f:
+                  data = json.load(f)
+          else:
+              data = {"history": []}
+
+          hist = {p["date"]: p for p in data.get("history", [])}
+          hist[day] = {
+              "date": day,
+              "total": sum(releases.values()),
+              "releases": {tag: releases[tag] for tag in sorted(releases)},
+          }
+          out = {
+              "repo": repo,
+              "unit": "cumulative_release_downloads",
+              "note": "Downloads of the release package file, not users. Includes automated installs such as CI.",
+              "history": [hist[d] for d in sorted(hist)],
+          }
+
+          os.makedirs(os.path.dirname(path), exist_ok=True)
+          with open(path, "w") as f:
+              json.dump(out, f, indent=2)
+              f.write("\n")
+          print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["total"], len(releases)))
+          PY
+
+      # Changes land through one rolling PR, so this works when main requires
+      # pull requests. The PR accumulates snapshots until merged and no-ops when
+      # the JSON is unchanged.
+      - name: Open or update the snapshot PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: .github/stats/download-history.json
+          branch: chore/download-history
+          base: main
+          commit-message: "chore: record weekly download snapshot"
+          title: "chore: weekly download-history snapshot"
+          body: |
+            Automated weekly snapshot of cumulative downloads of the trustabl-forge package file.
+            Updates `.github/stats/download-history.json`. These are downloads, not users.
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          delete-branch: false
