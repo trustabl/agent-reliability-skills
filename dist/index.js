@@ -21854,13 +21854,17 @@ function finalizeInstall(tmpDir, finalDir, exe) {
   fs3.rmSync(tmpDir, { recursive: true, force: true });
   return path3.join(finalDir, exe);
 }
-function extract(archivePath, destDir) {
-  const [cmd, args] = process.platform === "win32" ? ["powershell", [
+function extractCommand(archivePath, destDir, platform = process.platform) {
+  const ps = (p) => p.replaceAll("'", "''");
+  return platform === "win32" ? ["powershell", [
     "-NoProfile",
     "-NonInteractive",
     "-Command",
-    `Expand-Archive -LiteralPath '${archivePath}' -DestinationPath '${destDir}' -Force`
+    `Expand-Archive -LiteralPath '${ps(archivePath)}' -DestinationPath '${ps(destDir)}' -Force`
   ]] : ["tar", ["-xf", archivePath, "-C", destDir]];
+}
+function extract(archivePath, destDir) {
+  const [cmd, args] = extractCommand(archivePath, destDir);
   const r = spawnSync(cmd, args, { encoding: "utf8" });
   if (r.error) throw new Error(`Could not extract ${path3.basename(archivePath)}: ${r.error.message}`);
   if (r.status !== 0) {

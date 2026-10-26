@@ -69,12 +69,18 @@ export function finalizeInstall(tmpDir, finalDir, exe) {
  * safe way to unpack the zip (GNU tar under Git Bash cannot read zip archives);
  * PowerShell's Expand-Archive is always present on Windows 10+.
  */
+export function extractCommand(archivePath, destDir, platform = process.platform) {
+  // Inside a single-quoted PowerShell string a literal ' is written ''
+  // (a profile folder such as C:\Users\O'Brien would end the string early).
+  const ps = (p) => p.replaceAll("'", "''");
+  return platform === "win32"
+    ? ["powershell", ["-NoProfile", "-NonInteractive", "-Command",
+        `Expand-Archive -LiteralPath '${ps(archivePath)}' -DestinationPath '${ps(destDir)}' -Force`]]
+    : ["tar", ["-xf", archivePath, "-C", destDir]];
+}
+
 function extract(archivePath, destDir) {
-  const [cmd, args] =
-    process.platform === "win32"
-      ? ["powershell", ["-NoProfile", "-NonInteractive", "-Command",
-          `Expand-Archive -LiteralPath '${archivePath}' -DestinationPath '${destDir}' -Force`]]
-      : ["tar", ["-xf", archivePath, "-C", destDir]];
+  const [cmd, args] = extractCommand(archivePath, destDir);
   const r = spawnSync(cmd, args, { encoding: "utf8" });
   if (r.error) throw new Error(`Could not extract ${path.basename(archivePath)}: ${r.error.message}`);
   if (r.status !== 0) {

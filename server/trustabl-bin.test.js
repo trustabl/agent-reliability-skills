@@ -10,6 +10,7 @@ import {
   assetName,
   createResolver,
   expectedChecksum,
+  extractCommand,
   finalizeInstall,
   platformTarget,
 } from "./trustabl-bin.js";
@@ -208,6 +209,16 @@ test("a pinned TRUSTABL_VERSION never consults the release lookup or the fallbac
   assert.equal(await ensure(), pinned);
   assert.notEqual(pinned, newer);
   assert.equal(fetchImpl.calls.length, 0);
+});
+
+test("extractCommand doubles a single quote in the Windows paths and leaves tar's argv alone", () => {
+  const [cmd, args] = extractCommand("C:\\Users\\O'Brien\\a.zip", "C:\\Users\\O'Brien\\.trustabl-forge\\.tmp-x", "win32");
+  assert.equal(cmd, "powershell");
+  assert.equal(
+    args.at(-1),
+    "Expand-Archive -LiteralPath 'C:\\Users\\O''Brien\\a.zip' -DestinationPath 'C:\\Users\\O''Brien\\.trustabl-forge\\.tmp-x' -Force",
+  );
+  assert.deepEqual(extractCommand("/a/it's.tgz", "/b", "linux"), ["tar", ["-xf", "/a/it's.tgz", "-C", "/b"]]);
 });
 
 // ---- install(): the checksum gate. A binary that fails any step must never be
