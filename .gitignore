@@ -1,0 +1,4 @@
+node_modules/
+*.tgz
+checksums.txt
+.DS_Store
