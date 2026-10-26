@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "trustabl-forge": {
+      "command": "npx",
+      "args": ["-y", "https://github.com/trustabl/trustabl-forge/releases/download/v0.1.0/trustabl-forge-0.1.0.tgz"],
+      "env": {
+        "TRUSTABL_VERSION": "${TRUSTABL_VERSION}",
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
