@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { test } from "node:test";
 
 import {
@@ -206,4 +208,77 @@ test("a pinned TRUSTABL_VERSION never consults the release lookup or the fallbac
   assert.equal(await ensure(), pinned);
   assert.notEqual(pinned, newer);
   assert.equal(fetchImpl.calls.length, 0);
+});
+
+// ---- install(): the checksum gate. A binary that fails any step must never be
+// ---- left in the cache, because the next call would run it unverified.
+
+const download404 = { ok: false, status: 404 };
+const bytes = (buf) => ({
+  ok: true,
+  status: 200,
+  arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length),
+});
+const checksumsFile = (text) => ({ ok: true, status: 200, text: async () => text });
+const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
+
+// Everything under the cache root: version folders and .tmp-* leftovers alike.
+const cacheEntries = (home) => {
+  const root = path.join(home, ".trustabl-forge");
+  return fs.existsSync(root) ? fs.readdirSync(root) : [];
+};
+
+async function assertRefused(responses, message) {
+  const home = tmp();
+  const ensure = createResolver({ env: { TRUSTABL_VERSION: "v0.1.15" }, home, fetchImpl: fakeFetch(...responses), log: quiet });
+  await assert.rejects(ensure(), message);
+  assert.deepEqual(cacheEntries(home), [], "no version folder and no .tmp-* may remain");
+}
+
+const asset = assetName("v0.1.15", platformTarget());
+const junk = Buffer.from("not really an archive");
+
+test("install: a 404 on the archive fails and leaves nothing in the cache", async () => {
+  await assertRefused([download404], /Download failed \(HTTP 404\)/);
+});
+
+test("install: a 404 on checksums.txt refuses to run an unverified binary", async () => {
+  await assertRefused([bytes(junk), download404], /Could not fetch checksums\.txt \(HTTP 404\); refusing to run an unverified binary/);
+});
+
+test("install: an asset missing from checksums.txt is refused", async () => {
+  await assertRefused(
+    [bytes(junk), checksumsFile(`${sha256(junk)}  some_other_asset.tar.gz\n`)],
+    /is not listed in checksums\.txt; refusing to run an unverified binary/,
+  );
+});
+
+test("install: a checksum mismatch is a hard failure", async () => {
+  await assertRefused([bytes(junk), checksumsFile(`${"0".repeat(64)}  ${asset}\n`)], /Checksum mismatch/);
+});
+
+test("install: a matching checksum on a corrupt archive still fails to extract and leaves nothing", async () => {
+  await assertRefused([bytes(junk), checksumsFile(`${sha256(junk)}  ${asset}\n`)], /Could not extract/);
+});
+
+test("install: a verified archive is unpacked into the cache and both steps are logged", { skip: process.platform === "win32" }, async () => {
+  const src = tmp();
+  fs.writeFileSync(path.join(src, "trustabl"), '#!/bin/sh\nexit 0\n');
+  const archive = path.join(tmp(), asset);
+  const packed = spawnSync("tar", ["-czf", archive, "-C", src, "trustabl"], { encoding: "utf8" });
+  assert.equal(packed.status, 0, packed.stderr);
+  const body = fs.readFileSync(archive);
+
+  const home = tmp();
+  const logs = [];
+  const fetchImpl = fakeFetch(bytes(body), checksumsFile(`${sha256(body)}  ${asset}\n`));
+  const ensure = createResolver({ env: { TRUSTABL_VERSION: "v0.1.15" }, home, fetchImpl, log: (m) => logs.push(m) });
+  const bin = await ensure();
+  assert.equal(bin, path.join(home, ".trustabl-forge", "v0.1.15", "trustabl"));
+  assert.ok(fs.existsSync(bin));
+  assert.ok(logs.includes(`downloading ${asset} (v0.1.15)...`), logs.join("\n"));
+  assert.ok(logs.includes(`checksum verified: ${asset}`), logs.join("\n"));
+  assert.deepEqual(cacheEntries(home), ["v0.1.15"]);
+  assert.equal(fetchImpl.calls[0], `https://github.com/trustabl/agent-reliability-analyzer/releases/download/v0.1.15/${asset}`);
+  assert.equal(fetchImpl.calls[1], "https://github.com/trustabl/agent-reliability-analyzer/releases/download/v0.1.15/checksums.txt");
 });
