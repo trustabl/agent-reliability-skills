@@ -21,3 +21,9 @@ test("setting treats an unsubstituted ${...} placeholder as unset", () => {
 test("setting keeps a value that merely contains a placeholder", () => {
   assert.equal(setting("prefix-${X}"), "prefix-${X}");
 });
+
+test("setting treats an unexpanded ${VAR:-} placeholder (the form mcp.json ships) as unset", () => {
+  assert.equal(setting("${TRUSTABL_VERSION:-}"), undefined);
+  assert.equal(setting("${GITHUB_TOKEN:-}"), undefined);
+  assert.equal(setting(" ${GITHUB_TOKEN:-default} "), undefined);
+});
