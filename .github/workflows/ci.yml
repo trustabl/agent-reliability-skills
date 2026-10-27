@@ -40,6 +40,10 @@ jobs:
           fi
       - name: Install paths point at the release file
         run: node scripts/check-install-paths.mjs
+      # The install-path check, the release guards and the download-history
+      # Python, each run against throwaway inputs.
+      - name: Script and workflow tests
+        run: node --test scripts/*.test.mjs
 
   test:
     strategy:

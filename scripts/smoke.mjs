@@ -109,6 +109,7 @@ function check(cond, msg) {
 function expectSkill(res, label) {
   check(!res.isError, `${label}: not an error${res.isError ? ` (${text(res)})` : ""}`);
   check(/<!-- generated: [^>]*sdks: [^|]*claude_sdk/.test(res.content[1]?.text ?? ""), `${label}: SKILL.md stamped with claude_sdk`);
+  return res.content[1].text;
 }
 
 let client;
@@ -125,7 +126,7 @@ try {
     tool.annotations?.readOnlyHint === false && tool.annotations?.destructiveHint === true,
     "tool has readOnlyHint false and destructiveHint true",
   );
-  expectSkill(await client.call({ path: fixture }), "cold start");
+  const coldSkill = expectSkill(await client.call({ path: fixture }), "cold start");
   check(client.stderr.includes("downloading "), "cold start downloaded the analyzer binary");
   check(client.stderr.includes("checksum verified"), "cold start verified the checksum");
   check(JSON.stringify(fs.readdirSync(fixture)) === JSON.stringify(["package.json"]), "no file written without output_path");
@@ -146,7 +147,10 @@ try {
   // Roots: no path, workspace reported by the client.
   client = new Client([fixture]);
   await client.initialize();
-  expectSkill(await client.call({}), "roots");
+  const rootsRes = await client.call({});
+  const rootsSkill = expectSkill(rootsRes, "roots");
+  check(rootsRes.content[0].text.includes(fixture), "roots: the summary names the reported workspace");
+  check(rootsSkill === coldSkill, "roots: same SKILL.md as passing the path explicitly");
   client.close();
 
   console.log("smoke test passed");

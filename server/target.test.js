@@ -60,3 +60,21 @@ test("firstFileRoot skips malformed URIs", () => {
   assert.equal(firstFileRoot(null), null);
   assert.equal(firstFileRoot([]), null);
 });
+
+test("Windows drive paths are never mistaken for URLs", async () => {
+  // On Windows these are absolute; elsewhere they are relative and resolve
+  // against the root. Either way the result is "does not exist", not "URL".
+  const t = repo();
+  for (const p of ["C:/forge-target-test-missing", "C:\\forge-target-test-missing"]) {
+    await assert.rejects(resolveTarget(p, roots(pathToFileURL(t).href)), (err) => {
+      assert.ok(err instanceof ToolError, p);
+      assert.doesNotMatch(err.message, /not a URL/, p);
+      assert.match(err.message, /Path does not exist/, p);
+      return true;
+    });
+  }
+});
+
+test("a file:///C:/ root becomes a Windows drive path", { skip: process.platform !== "win32" }, () => {
+  assert.equal(firstFileRoot(["file:///C:/Users/dev/repo"]), "C:\\Users\\dev\\repo");
+});
