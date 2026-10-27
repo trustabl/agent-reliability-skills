@@ -13,7 +13,7 @@ await build({
   entryPoints: [here("index.js")],
   bundle: true,
   platform: "node",
-  target: "node18",
+  target: "node22",
   format: "esm",
   outfile: here("../dist/index.js"),
   define: { __FORGE_VERSION__: JSON.stringify(version) },

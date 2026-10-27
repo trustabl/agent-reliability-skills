@@ -17,6 +17,6 @@
     "url": "https://github.com/trustabl/trustabl-forge.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

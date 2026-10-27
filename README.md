@@ -13,7 +13,7 @@ Pydantic AI, the Vercel AI SDK and AutoGen.
 
 ## Install
 
-Requires Node.js 18 or later. Every install below downloads the release file from GitHub.
+Requires Node.js 22 or later. Every install below downloads the release file from GitHub.
 
 ### Claude Code
 
