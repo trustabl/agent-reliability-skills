@@ -4,7 +4,7 @@
 
 Report privately through GitHub, not in a public issue:
 
-**[Open a private security advisory](https://github.com/trustabl/trustabl-forge/security/advisories/new)**
+**[Open a private security advisory](https://github.com/trustabl/agent-reliability-skill-generator/security/advisories/new)**
 
 Please do not open a public issue or pull request for a suspected vulnerability.
 

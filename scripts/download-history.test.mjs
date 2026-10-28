@@ -74,9 +74,9 @@ function snapshot(dir, { pages, today, token = "" }) {
       FAKE_PAGES: file("pages.json"),
       FAKE_TODAY: today,
       SEEN: file("seen.json"),
-      TARGET_REPO: "trustabl/trustabl-forge",
+      TARGET_REPO: "trustabl/agent-reliability-skill-generator",
       HISTORY_FILE: "out/history.json",
-      PACKAGE_PREFIX: "trustabl-forge-",
+      PACKAGE_PREFIX: "agent-reliability-skill-generator-",
       GITHUB_TOKEN: token,
     },
   });
@@ -91,15 +91,15 @@ function snapshot(dir, { pages, today, token = "" }) {
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "download-history-"));
 
 const PAGE = [
-  release("v0.1.1", [asset("trustabl-forge-0.1.1.tgz", 7), asset("checksums.txt", 50)]),
-  release("v0.1.0", [asset("trustabl-forge-0.1.0.tgz", 30), asset("checksums.txt", 90), asset("trustabl-forge-0.1.0.zip", 4)]),
-  release("v0.2.0", [asset("trustabl-forge-0.2.0.tgz", 999)], { draft: true }),
+  release("v0.1.1", [asset("agent-reliability-skill-generator-0.1.1.tgz", 7), asset("checksums.txt", 50)]),
+  release("v0.1.0", [asset("agent-reliability-skill-generator-0.1.0.tgz", 30), asset("checksums.txt", 90), asset("agent-reliability-skill-generator-0.1.0.zip", 4)]),
+  release("v0.2.0", [asset("agent-reliability-skill-generator-0.2.0.tgz", 999)], { draft: true }),
   release("v0.0.9", [asset("other-0.0.9.tgz", 12)]),
 ];
 
 test("counts only the package file, skips drafts, and labels the unit", { skip: !python }, () => {
   const { history, stdout } = snapshot(tmp(), { pages: [PAGE], today: "2026-10-26" });
-  assert.equal(history.repo, "trustabl/trustabl-forge");
+  assert.equal(history.repo, "trustabl/agent-reliability-skill-generator");
   assert.equal(history.unit, "cumulative_release_downloads");
   assert.match(history.note, /not users/);
   assert.deepEqual(history.history, [
@@ -116,7 +116,7 @@ test("releases are listed in sorted tag order", { skip: !python }, () => {
 test("a same-day rerun replaces that day's entry", { skip: !python }, () => {
   const dir = tmp();
   snapshot(dir, { pages: [PAGE], today: "2026-10-26" });
-  const later = [release("v0.1.0", [asset("trustabl-forge-0.1.0.tgz", 41)])];
+  const later = [release("v0.1.0", [asset("agent-reliability-skill-generator-0.1.0.tgz", 41)])];
   const { history } = snapshot(dir, { pages: [later], today: "2026-10-26" });
   assert.deepEqual(history.history, [{ date: "2026-10-26", total: 41, releases: { "v0.1.0": 41 } }]);
 });
@@ -124,7 +124,7 @@ test("a same-day rerun replaces that day's entry", { skip: !python }, () => {
 test("earlier entries are kept unchanged and stay in date order", { skip: !python }, () => {
   const dir = tmp();
   snapshot(dir, { pages: [PAGE], today: "2026-10-26" });
-  const week2 = [release("v0.1.0", [asset("trustabl-forge-0.1.0.tgz", 55)])];
+  const week2 = [release("v0.1.0", [asset("agent-reliability-skill-generator-0.1.0.tgz", 55)])];
   const { history } = snapshot(dir, { pages: [week2], today: "2026-11-02" });
   assert.deepEqual(
     history.history.map((e) => [e.date, e.total]),
@@ -134,10 +134,10 @@ test("earlier entries are kept unchanged and stay in date order", { skip: !pytho
 });
 
 test("reads every page of releases", { skip: !python }, () => {
-  const full = Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}`, [asset(`trustabl-forge-1.0.${i}.tgz`, 1)]));
-  const { history, seen } = snapshot(tmp(), { pages: [full, [release("v0.9.0", [asset("trustabl-forge-0.9.0.tgz", 5)])]], today: "2026-10-26" });
+  const full = Array.from({ length: 100 }, (_, i) => release(`v1.0.${i}`, [asset(`agent-reliability-skill-generator-1.0.${i}.tgz`, 1)]));
+  const { history, seen } = snapshot(tmp(), { pages: [full, [release("v0.9.0", [asset("agent-reliability-skill-generator-0.9.0.tgz", 5)])]], today: "2026-10-26" });
   assert.equal(seen.length, 2);
-  assert.match(seen[1].url, /\/repos\/trustabl\/trustabl-forge\/releases\?per_page=100&page=2$/);
+  assert.match(seen[1].url, /\/repos\/trustabl\/agent-reliability-skill-generator\/releases\?per_page=100&page=2$/);
   assert.equal(Object.keys(history.history[0].releases).length, 101);
   assert.equal(history.history[0].total, 105);
 });

@@ -21783,7 +21783,7 @@ async function forgeTool(input, { ensureBin, run, getRoots }) {
     return result([summary({ target, skill: ran.stdout, written, note: ran.stderr.trim() }), ran.stdout]);
   } catch (err) {
     if (err instanceof ToolError) return result([err.message], true);
-    return result([`Unexpected error in trustabl-forge (please report it): ${err?.stack ?? err}`], true);
+    return result([`Unexpected error in agent-reliability-skill-generator (please report it): ${err?.stack ?? err}`], true);
   }
 }
 
@@ -21828,7 +21828,7 @@ var normalizeTag = (value) => /^\d/.test(value) ? `v${value}` : value;
 
 // trustabl-bin.js
 var REPO = "trustabl/agent-reliability-analyzer";
-var defaultLog = (msg) => process.stderr.write(`[trustabl-forge] ${msg}
+var defaultLog = (msg) => process.stderr.write(`[agent-reliability-skill-generator] ${msg}
 `);
 function platformTarget(platform = process.platform, arch = process.arch) {
   const osName = { linux: "linux", darwin: "darwin", win32: "windows" }[platform];
@@ -21874,7 +21874,7 @@ function extract(archivePath, destDir) {
 function createResolver({ env = process.env, home = os.homedir(), fetchImpl = globalThis.fetch, log: log2 = defaultLog } = {}) {
   let pending = null;
   const ghHeaders = () => {
-    const h = { "User-Agent": "trustabl-forge" };
+    const h = { "User-Agent": "agent-reliability-skill-generator" };
     const token = setting(env.GITHUB_TOKEN);
     if (token) h.Authorization = `Bearer ${token}`;
     return h;
@@ -21952,7 +21952,7 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
       );
     }
     const target = platformTarget();
-    const cacheRoot = path3.join(home, ".trustabl-forge");
+    const cacheRoot = path3.join(home, ".agent-reliability-skill-generator");
     let version2 = pinned;
     if (!version2) {
       try {
@@ -21985,9 +21985,9 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
 
 // index.js
 var VERSION = true ? "0.1.0" : "dev";
-var log = (msg) => process.stderr.write(`[trustabl-forge] ${msg}
+var log = (msg) => process.stderr.write(`[agent-reliability-skill-generator] ${msg}
 `);
-var server = new McpServer({ name: "trustabl-forge", version: VERSION });
+var server = new McpServer({ name: "agent-reliability-skill-generator", version: VERSION });
 var ensureTrustabl = createResolver();
 async function clientRoots() {
   if (!server.server.getClientCapabilities()?.roots) return null;

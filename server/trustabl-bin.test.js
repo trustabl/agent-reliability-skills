@@ -34,7 +34,7 @@ const latest = (tag) => ({ ok: true, status: 200, json: async () => ({ tag_name:
 // Pretend `version` is already installed in the cache under home.
 function seedCache(home, version) {
   const { exe } = platformTarget();
-  const dir = path.join(home, ".trustabl-forge", version);
+  const dir = path.join(home, ".agent-reliability-skill-generator", version);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, exe), "");
   return path.join(dir, exe);
@@ -179,9 +179,9 @@ test("a non-OK latest lookup falls back to the newest cached version, compared a
 test("the fallback ignores a cached version below the floor and a folder without the binary", async () => {
   const home = tmp();
   seedCache(home, "v0.1.13");
-  fs.mkdirSync(path.join(home, ".trustabl-forge", "v0.1.20"), { recursive: true });
-  fs.mkdirSync(path.join(home, ".trustabl-forge", ".tmp-v0.1.30-1-abcd"), { recursive: true });
-  fs.mkdirSync(path.join(home, ".trustabl-forge", "notes"), { recursive: true });
+  fs.mkdirSync(path.join(home, ".agent-reliability-skill-generator", "v0.1.20"), { recursive: true });
+  fs.mkdirSync(path.join(home, ".agent-reliability-skill-generator", ".tmp-v0.1.30-1-abcd"), { recursive: true });
+  fs.mkdirSync(path.join(home, ".agent-reliability-skill-generator", "notes"), { recursive: true });
   const usable = seedCache(home, "v0.1.14");
   const ensure = createResolver({ env: {}, home, fetchImpl: offline(), log: quiet });
   assert.equal(await ensure(), usable);
@@ -212,11 +212,11 @@ test("a pinned TRUSTABL_VERSION never consults the release lookup or the fallbac
 });
 
 test("extractCommand doubles a single quote in the Windows paths and leaves tar's argv alone", () => {
-  const [cmd, args] = extractCommand("C:\\Users\\O'Brien\\a.zip", "C:\\Users\\O'Brien\\.trustabl-forge\\.tmp-x", "win32");
+  const [cmd, args] = extractCommand("C:\\Users\\O'Brien\\a.zip", "C:\\Users\\O'Brien\\.agent-reliability-skill-generator\\.tmp-x", "win32");
   assert.equal(cmd, "powershell");
   assert.equal(
     args.at(-1),
-    "Expand-Archive -LiteralPath 'C:\\Users\\O''Brien\\a.zip' -DestinationPath 'C:\\Users\\O''Brien\\.trustabl-forge\\.tmp-x' -Force",
+    "Expand-Archive -LiteralPath 'C:\\Users\\O''Brien\\a.zip' -DestinationPath 'C:\\Users\\O''Brien\\.agent-reliability-skill-generator\\.tmp-x' -Force",
   );
   assert.deepEqual(extractCommand("/a/it's.tgz", "/b", "linux"), ["tar", ["-xf", "/a/it's.tgz", "-C", "/b"]]);
 });
@@ -235,7 +235,7 @@ const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
 
 // Everything under the cache root: version folders and .tmp-* leftovers alike.
 const cacheEntries = (home) => {
-  const root = path.join(home, ".trustabl-forge");
+  const root = path.join(home, ".agent-reliability-skill-generator");
   return fs.existsSync(root) ? fs.readdirSync(root) : [];
 };
 
@@ -285,7 +285,7 @@ test("install: a verified archive is unpacked into the cache and both steps are 
   const fetchImpl = fakeFetch(bytes(body), checksumsFile(`${sha256(body)}  ${asset}\n`));
   const ensure = createResolver({ env: { TRUSTABL_VERSION: "v0.1.15" }, home, fetchImpl, log: (m) => logs.push(m) });
   const bin = await ensure();
-  assert.equal(bin, path.join(home, ".trustabl-forge", "v0.1.15", "trustabl"));
+  assert.equal(bin, path.join(home, ".agent-reliability-skill-generator", "v0.1.15", "trustabl"));
   assert.ok(fs.existsSync(bin));
   assert.ok(logs.includes(`downloading ${asset} (v0.1.15)...`), logs.join("\n"));
   assert.ok(logs.includes(`checksum verified: ${asset}`), logs.join("\n"));

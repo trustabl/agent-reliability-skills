@@ -30,9 +30,9 @@ function stepScript(name) {
 
 const bash = spawnSync("bash", ["--version"]).status === 0;
 
-function guard(step, { tag, version = "0.1.0", readme = "# Trustabl Forge\n" }) {
+function guard(step, { tag, version = "0.1.0", readme = "# Agent Reliability Skill Generator\n" }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "release-guard-"));
-  fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "trustabl-forge", version }));
+  fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "agent-reliability-skill-generator", version }));
   fs.writeFileSync(path.join(dir, "README.md"), readme);
   const run = spawnSync("bash", ["-e", "-c", stepScript(step)], {
     cwd: dir,

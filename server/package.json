@@ -1,8 +1,8 @@
 {
-  "name": "trustabl-forge-server",
+  "name": "agent-reliability-skill-generator-server",
   "version": "0.0.0",
   "private": true,
-  "description": "Source of the trustabl-forge MCP server; bundled into ../dist/index.js",
+  "description": "Source of the agent-reliability-skill-generator MCP server; bundled into ../dist/index.js",
   "type": "module",
   "main": "index.js",
   "scripts": {

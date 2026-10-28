@@ -2,7 +2,7 @@
 //
 // Order: TRUSTABL_BIN override -> the release named by TRUSTABL_VERSION
 // (default: latest), downloaded for this OS/arch, sha256-verified against the
-// release checksums.txt, and cached under ~/.trustabl-forge/<version>/.
+// release checksums.txt, and cached under ~/.agent-reliability-skill-generator/<version>/.
 //
 // Adapted from trustabl-cursor/server/trustabl-bin.js. Unlike it:
 //   - a plain `trustabl` on PATH is never used: it may predate forge --lang;
@@ -24,7 +24,7 @@ import { setting } from "./settings.js";
 import { MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
 
 const REPO = "trustabl/agent-reliability-analyzer";
-const defaultLog = (msg) => process.stderr.write(`[trustabl-forge] ${msg}\n`);
+const defaultLog = (msg) => process.stderr.write(`[agent-reliability-skill-generator] ${msg}\n`);
 
 /** linux/darwin/windows + amd64/arm64, matching the release asset matrix. */
 export function platformTarget(platform = process.platform, arch = process.arch) {
@@ -98,7 +98,7 @@ export function createResolver({ env = process.env, home = os.homedir(), fetchIm
   let pending = null;
 
   const ghHeaders = () => {
-    const h = { "User-Agent": "trustabl-forge" };
+    const h = { "User-Agent": "agent-reliability-skill-generator" };
     const token = setting(env.GITHUB_TOKEN);
     if (token) h.Authorization = `Bearer ${token}`;
     return h;
@@ -190,7 +190,7 @@ export function createResolver({ env = process.env, home = os.homedir(), fetchIm
     }
 
     const target = platformTarget();
-    const cacheRoot = path.join(home, ".trustabl-forge");
+    const cacheRoot = path.join(home, ".agent-reliability-skill-generator");
     let version = pinned;
     if (!version) {
       try {
