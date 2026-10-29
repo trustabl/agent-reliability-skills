@@ -1,6 +1,6 @@
 name: Download history
 
-# Weekly snapshot of cumulative downloads of the agent-reliability-skill-generator package file.
+# Weekly snapshot of cumulative downloads of the agent-reliability-skills package file.
 # GitHub exposes only the current total per release asset (download_count),
 # with no history, so each run records one dated entry and commits it.
 # A same-day rerun replaces that day's entry; earlier entries are never changed.
@@ -26,7 +26,7 @@ jobs:
           TARGET_REPO: ${{ github.repository }}
           HISTORY_FILE: .github/stats/download-history.json
           # Only the package file is an install; checksums.txt downloads are not.
-          PACKAGE_PREFIX: agent-reliability-skill-generator-
+          PACKAGE_PREFIX: agent-reliability-skills-
         run: |
           python3 - <<'PY'
           import datetime, json, os, urllib.request
@@ -40,7 +40,7 @@ jobs:
               req = urllib.request.Request(url)
               req.add_header("Accept", "application/vnd.github+json")
               req.add_header("X-GitHub-Api-Version", "2022-11-28")
-              req.add_header("User-Agent", "agent-reliability-skill-generator-download-history")
+              req.add_header("User-Agent", "agent-reliability-skills-download-history")
               if token:
                   req.add_header("Authorization", "Bearer " + token)
               with urllib.request.urlopen(req, timeout=30) as r:
@@ -104,7 +104,7 @@ jobs:
           commit-message: "chore: record weekly download snapshot"
           title: "chore: weekly download-history snapshot"
           body: |
-            Automated weekly snapshot of cumulative downloads of the agent-reliability-skill-generator package file.
+            Automated weekly snapshot of cumulative downloads of the agent-reliability-skills package file.
             Updates `.github/stats/download-history.json`. These are downloads, not users.
           author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
           committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"

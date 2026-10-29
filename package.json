@@ -1,10 +1,10 @@
 {
-  "name": "agent-reliability-skill-generator",
+  "name": "agent-reliability-skills",
   "version": "0.1.0",
   "description": "MCP server that generates a pre-coding reliability skill (SKILL.md) for your agent repository with Trustabl Forge",
   "type": "module",
   "bin": {
-    "agent-reliability-skill-generator": "dist/index.js"
+    "agent-reliability-skills": "dist/index.js"
   },
   "files": [
     "dist",
@@ -14,7 +14,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trustabl/agent-reliability-skill-generator.git"
+    "url": "https://github.com/trustabl/agent-reliability-skills.git"
   },
   "engines": {
     "node": ">=22"

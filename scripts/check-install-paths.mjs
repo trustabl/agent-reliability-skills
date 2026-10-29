@@ -7,8 +7,8 @@ import fs from "node:fs";
 
 const FILES = ["README.md", "mcp.json"];
 const { version } = JSON.parse(fs.readFileSync("package.json", "utf8"));
-const url = `https://github.com/trustabl/agent-reliability-skill-generator/releases/download/v${version}/agent-reliability-skill-generator-${version}.tgz`;
-const fromRepo = /github:trustabl\/agent-reliability-skill-generator|(git\+)?https:\/\/github\.com\/trustabl\/agent-reliability-skill-generator(\.git)?(?=["'\s#]|$)/m;
+const url = `https://github.com/trustabl/agent-reliability-skills/releases/download/v${version}/agent-reliability-skills-${version}.tgz`;
+const fromRepo = /github:trustabl\/agent-reliability-skills|(git\+)?https:\/\/github\.com\/trustabl\/agent-reliability-skills(\.git)?(?=["'\s#]|$)/m;
 
 let failed = false;
 for (const file of FILES) {

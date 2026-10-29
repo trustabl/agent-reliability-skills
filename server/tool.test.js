@@ -96,7 +96,7 @@ test("a stderr note from a successful run is included in the summary", async () 
 test("an unexpected exception is reported as a bug, not a crash", async () => {
   const r = await forgeTool({ path: repo() }, deps({ result: new TypeError("boom") }));
   assert.equal(r.isError, true);
-  assert.match(texts(r)[0], /Unexpected error in agent-reliability-skill-generator.*boom/s);
+  assert.match(texts(r)[0], /Unexpected error in agent-reliability-skills.*boom/s);
 });
 
 test("summary says when the output carries no stamp", () => {

@@ -90,6 +90,6 @@ export async function forgeTool(input, { ensureBin, run, getRoots }) {
     return result([summary({ target, skill: ran.stdout, written, note: ran.stderr.trim() }), ran.stdout]);
   } catch (err) {
     if (err instanceof ToolError) return result([err.message], true);
-    return result([`Unexpected error in agent-reliability-skill-generator (please report it): ${err?.stack ?? err}`], true);
+    return result([`Unexpected error in agent-reliability-skills (please report it): ${err?.stack ?? err}`], true);
   }
 }

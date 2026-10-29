@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "agent-reliability-skill-generator": {
+    "agent-reliability-skills": {
       "command": "npx",
-      "args": ["-y", "https://github.com/trustabl/agent-reliability-skill-generator/releases/download/v0.1.0/agent-reliability-skill-generator-0.1.0.tgz"],
+      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0/agent-reliability-skills-0.1.0.tgz"],
       "env": {
         "TRUSTABL_VERSION": "${TRUSTABL_VERSION:-}",
         "GITHUB_TOKEN": "${GITHUB_TOKEN:-}"

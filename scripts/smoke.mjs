@@ -15,7 +15,7 @@ const serverPath = path.join(repo, "dist", "index.js");
 const fixture = path.join(repo, "testdata", "claude-sdk");
 // A fresh home and cache, so the first start is a genuine cold start: no
 // cached trustabl binary and no cached rules.
-const home = fs.mkdtempSync(path.join(os.tmpdir(), "agent-reliability-skill-generator-smoke-"));
+const home = fs.mkdtempSync(path.join(os.tmpdir(), "agent-reliability-skills-smoke-"));
 const env = {
   ...process.env,
   HOME: home,
@@ -85,7 +85,7 @@ class Client {
     const res = await this.request("initialize", {
       protocolVersion: "2025-06-18",
       capabilities,
-      clientInfo: { name: "agent-reliability-skill-generator-smoke", version: "0" },
+      clientInfo: { name: "agent-reliability-skills-smoke", version: "0" },
     });
     this.send({ jsonrpc: "2.0", method: "notifications/initialized" });
     return res;
@@ -117,7 +117,7 @@ try {
   // Cold start: handshake, listing, first real call.
   client = new Client(null);
   const init = await client.initialize();
-  check(init.serverInfo?.name === "agent-reliability-skill-generator", "initialize returns serverInfo agent-reliability-skill-generator");
+  check(init.serverInfo?.name === "agent-reliability-skills", "initialize returns serverInfo agent-reliability-skills");
   const { tools } = await client.request("tools/list", {});
   const tool = tools.find((t) => t.name === "trustabl_forge");
   check(tool, "tools/list includes trustabl_forge");

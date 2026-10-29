@@ -1,9 +1,9 @@
-# Agent Reliability Skill Generator MCP server
+# Agent Reliability Skills MCP server
 
-The Agent Reliability Skill Generator writes a pre-coding reliability skill for **your** repository. It reads the
-repository's dependency manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod` and others), finds
-the agent SDKs it uses, and builds a `SKILL.md` from Trustabl's detection rules for exactly those SDKs. An agent that
-reads the skill applies the rules while it writes code, instead of meeting them later as findings in a scan.
+Agent Reliability Skills writes a pre-coding reliability skill for **your** repository. It reads the repository's
+dependency manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod` and others), finds the agent
+SDKs it uses, and builds a `SKILL.md` from Trustabl's detection rules for exactly those SDKs. An agent that reads
+the skill applies the rules while it writes code, instead of meeting them later as findings in a scan.
 
 The skill is generated per repository. It is not a fixed skill to install, and it changes as your dependencies
 and Trustabl's rules change.
@@ -18,7 +18,7 @@ Requires Node.js 22 or later. Every install below downloads the release file fro
 ### Claude Code
 
 ```bash
-claude mcp add agent-reliability-skill-generator -- npx -y https://github.com/trustabl/agent-reliability-skill-generator/releases/download/v0.1.0/agent-reliability-skill-generator-0.1.0.tgz
+claude mcp add agent-reliability-skills -- npx -y https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0/agent-reliability-skills-0.1.0.tgz
 ```
 
 ### Cursor
@@ -28,9 +28,9 @@ Add to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for every pro
 ```json
 {
   "mcpServers": {
-    "agent-reliability-skill-generator": {
+    "agent-reliability-skills": {
       "command": "npx",
-      "args": ["-y", "https://github.com/trustabl/agent-reliability-skill-generator/releases/download/v0.1.0/agent-reliability-skill-generator-0.1.0.tgz"]
+      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0/agent-reliability-skills-0.1.0.tgz"]
     }
   }
 }
@@ -80,9 +80,9 @@ guesses from the server's working directory, because some clients start servers 
 
 The server runs the [Trustabl analyzer](https://github.com/trustabl/agent-reliability-analyzer)'s
 `trustabl forge`. On first use it downloads the analyzer release for your OS and architecture, checks it against
-the release's `checksums.txt` (a mismatch is a hard failure), and caches it in
-`~/.agent-reliability-skill-generator/<version>/`. The analyzer's own `TRUSTABL_TELEMETRY` setting applies to the
-binary it runs; analyzer telemetry is off until you configure it.
+the release's `checksums.txt` (a mismatch is a hard failure), and caches it in `~/.agent-reliability-skills/<version>/`.
+The analyzer's own `TRUSTABL_TELEMETRY` setting applies to the binary it runs; analyzer telemetry is off until
+you configure it.
 
 ## Network
 
@@ -91,7 +91,7 @@ caches. After that both work offline from cache. No `git` binary is needed.
 
 ## Download counts
 
-Each release attaches `agent-reliability-skill-generator-<version>.tgz` and `checksums.txt`, and every install above
+Each release attaches `agent-reliability-skills-<version>.tgz` and `checksums.txt`, and every install above
 downloads the `.tgz`, so GitHub counts it. RESULT-COUNT-MEANING A weekly workflow records the counts in
 `.github/stats/download-history.json`. They are downloads, not users, and include automated installs such as CI.
 
