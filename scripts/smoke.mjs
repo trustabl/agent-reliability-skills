@@ -4,11 +4,11 @@
 // fixture repository: cold start, warm start, errors, and MCP roots.
 // Needs network on the first call (analyzer binary + rules). Set GITHUB_TOKEN
 // in CI to stay under GitHub's anonymous rate limit.
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { Client, text } from "./mcp-client.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const serverPath = path.join(repo, "dist", "index.js");
@@ -25,83 +25,6 @@ const env = {
 };
 delete env.TRUSTABL_BIN;
 
-class Client {
-  // roots: directories to report through MCP roots, or null to not declare the capability.
-  constructor(roots) {
-    this.roots = roots;
-    this.nextId = 1;
-    this.pending = new Map();
-    this.stderr = "";
-    this.proc = spawn(process.execPath, [serverPath], { env, stdio: ["pipe", "pipe", "pipe"] });
-    let buf = "";
-    this.proc.stdout.setEncoding("utf8");
-    this.proc.stdout.on("data", (chunk) => {
-      buf += chunk;
-      for (let nl = buf.indexOf("\n"); nl >= 0; nl = buf.indexOf("\n")) {
-        const line = buf.slice(0, nl).trim();
-        buf = buf.slice(nl + 1);
-        if (line) this.onMessage(JSON.parse(line));
-      }
-    });
-    this.proc.stderr.setEncoding("utf8");
-    this.proc.stderr.on("data", (chunk) => {
-      this.stderr += chunk;
-      process.stderr.write(chunk);
-    });
-  }
-
-  onMessage(msg) {
-    if (msg.method === "roots/list" && msg.id !== undefined) {
-      const roots = (this.roots ?? []).map((dir) => ({ uri: pathToFileURL(dir).href, name: path.basename(dir) }));
-      this.send({ jsonrpc: "2.0", id: msg.id, result: { roots } });
-      return;
-    }
-    const done = this.pending.get(msg.id);
-    if (done) {
-      this.pending.delete(msg.id);
-      done(msg);
-    }
-  }
-
-  send(msg) {
-    this.proc.stdin.write(`${JSON.stringify(msg)}\n`);
-  }
-
-  request(method, params, timeoutMs = 300_000) {
-    const id = this.nextId++;
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error(`${method} timed out`)), timeoutMs);
-      this.pending.set(id, (msg) => {
-        clearTimeout(timer);
-        if (msg.error) reject(new Error(`${method}: ${JSON.stringify(msg.error)}`));
-        else resolve(msg.result);
-      });
-      this.send({ jsonrpc: "2.0", id, method, params });
-    });
-  }
-
-  async initialize() {
-    const capabilities = this.roots ? { roots: {} } : {};
-    const res = await this.request("initialize", {
-      protocolVersion: "2025-06-18",
-      capabilities,
-      clientInfo: { name: "agent-reliability-skills-smoke", version: "0" },
-    });
-    this.send({ jsonrpc: "2.0", method: "notifications/initialized" });
-    return res;
-  }
-
-  call(args) {
-    return this.request("tools/call", { name: "trustabl_forge", arguments: args });
-  }
-
-  close() {
-    this.proc.stdin.end();
-    this.proc.kill();
-  }
-}
-
-const text = (res) => res.content.map((c) => c.text).join("\n");
 function check(cond, msg) {
   if (!cond) throw new Error(`FAIL: ${msg}`);
   console.log(`ok - ${msg}`);
@@ -115,8 +38,8 @@ function expectSkill(res, label) {
 let client;
 try {
   // Cold start: handshake, listing, first real call.
-  client = new Client(null);
-  const init = await client.initialize();
+  client = new Client({ serverPath, env });
+  const init = await client.initialize("agent-reliability-skills-smoke");
   check(init.serverInfo?.name === "agent-reliability-skills", "initialize returns serverInfo agent-reliability-skills");
   const { tools } = await client.request("tools/list", {});
   const tool = tools.find((t) => t.name === "trustabl_forge");
@@ -138,15 +61,15 @@ try {
   client.close();
 
   // Warm start: a new process must reuse the cached binary.
-  client = new Client(null);
-  await client.initialize();
+  client = new Client({ serverPath, env });
+  await client.initialize("agent-reliability-skills-smoke");
   expectSkill(await client.call({ path: fixture }), "warm start");
   check(!client.stderr.includes("downloading "), "warm start reused the cached binary");
   client.close();
 
   // Roots: no path, workspace reported by the client.
-  client = new Client([fixture]);
-  await client.initialize();
+  client = new Client({ serverPath, env, roots: [fixture] });
+  await client.initialize("agent-reliability-skills-smoke");
   const rootsRes = await client.call({});
   const rootsSkill = expectSkill(rootsRes, "roots");
   check(rootsRes.content[0].text.includes(fixture), "roots: the summary names the reported workspace");

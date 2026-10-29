@@ -1,0 +1,292 @@
+[
+  {
+    "repo": "openai/openai-agents-python",
+    "commit": "cd26bbbc52847845fde73b9952b51e62e2bcbdc0",
+    "layout": "root manifest",
+    "expect": [
+      "mcp",
+      "openai_sdk"
+    ],
+    "expectAtRoot": [
+      "mcp",
+      "openai_sdk"
+    ]
+  },
+  {
+    "repo": "openai/openai-agents-js",
+    "commit": "52fcb5769c74844b198affe377e75fe04b1732a3",
+    "layout": "subfolders only",
+    "expect": [
+      "mcp",
+      "openai_sdk",
+      "vercel_ai"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "openai/openai-realtime-agents",
+    "commit": "94c9e9116b581052655cff7b756cc5e02771cda1",
+    "layout": "root manifest",
+    "expect": [
+      "openai_sdk"
+    ],
+    "expectAtRoot": [
+      "openai_sdk"
+    ]
+  },
+  {
+    "repo": "openai/openai-cs-agents-demo",
+    "commit": "bd7bfca0f5abf50529370814c3e7c88542011925",
+    "layout": "subfolders only",
+    "expect": [
+      "openai_sdk"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "anthropics/claude-agent-sdk-python",
+    "commit": "27858cbba9ecee26a06a90b8d39d3b5596121d11",
+    "layout": "root manifest",
+    "expect": [
+      "claude_sdk",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "claude_sdk",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "anthropics/claude-agent-sdk-demos",
+    "commit": "826b268506a5f3707623c9e6140b200befcbebae",
+    "layout": "subfolders only",
+    "expect": [
+      "claude_sdk"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "anthropics/claude-code-action",
+    "commit": "d70510b174a1244958df0b03166a54912811f3e6",
+    "layout": "root manifest",
+    "expect": [
+      "claude_sdk",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "claude_sdk",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "google/adk-python",
+    "commit": "3640e7d0c74bb2d377a58271ac6290d2e51ee60d",
+    "layout": "root manifest",
+    "expect": [
+      "crewai",
+      "google_adk",
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "crewai",
+      "google_adk",
+      "langchain",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "google/adk-samples",
+    "commit": "66c0c586136c6db459967983e91656a6df2b7e91",
+    "layout": "subfolders only",
+    "expect": [
+      "google_adk",
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "google/adk-go",
+    "commit": "714d35ffcef5e6652e14309d43b3e88a7ed0b956",
+    "layout": "root manifest",
+    "expect": [
+      "google_adk",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "google_adk",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "langchain-ai/open_deep_research",
+    "commit": "1b7d2e80db9faa586165c60e09096dbbfd483a64",
+    "layout": "root manifest",
+    "expect": [
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "langchain",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "langchain-ai/react-agent",
+    "commit": "87aac0fdcb811d05457314a42418f3fbe139933a",
+    "layout": "root manifest",
+    "expect": [
+      "langchain"
+    ],
+    "expectAtRoot": [
+      "langchain"
+    ]
+  },
+  {
+    "repo": "langchain-ai/agent-chat-ui",
+    "commit": "2624b821a4542e115a7e8eb8917e4cfb42397ce6",
+    "layout": "root manifest",
+    "expect": [
+      "langchain"
+    ],
+    "expectAtRoot": [
+      "langchain"
+    ]
+  },
+  {
+    "repo": "langchain-ai/langchain-mcp-adapters",
+    "commit": "52a4535f3eb4b98f386836e4d9b8c4cadf99afca",
+    "layout": "root manifest",
+    "expect": [
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "langchain",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "crewAIInc/crewAI",
+    "commit": "699cedcddce69cb5a9997dfe4afae5c1c1c11789",
+    "layout": "subfolders only",
+    "expect": [
+      "crewai",
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "crewAIInc/crewAI-examples",
+    "commit": "da94a91e691e1cf5b3151416bb15b5b62729bea8",
+    "layout": "subfolders only",
+    "expect": [
+      "crewai",
+      "langchain"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "pydantic/pydantic-ai",
+    "commit": "c2ef90b6acbf2e5c3777e08cf538c858fe8d7ac1",
+    "layout": "root + subfolders",
+    "expect": [
+      "mcp",
+      "pydantic_ai",
+      "vercel_ai"
+    ],
+    "expectAtRoot": [
+      "mcp",
+      "pydantic_ai"
+    ]
+  },
+  {
+    "repo": "vercel/chatbot",
+    "commit": "c2f8235e1f3ea903ad8b7f61447c4f74164b5c58",
+    "layout": "root manifest",
+    "expect": [
+      "vercel_ai"
+    ],
+    "expectAtRoot": [
+      "vercel_ai"
+    ]
+  },
+  {
+    "repo": "microsoft/autogen",
+    "commit": "d07c667a3239ea4ab7af62a53b0f4ff205a1f23d",
+    "layout": "subfolders only",
+    "expect": [
+      "autogen",
+      "langchain",
+      "mcp"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "ag2ai/ag2",
+    "commit": "59bba8fddd1b23a29ec50e19dd0a3a6c9845467b",
+    "layout": "root manifest",
+    "expect": [
+      "autogen",
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "autogen",
+      "mcp"
+    ]
+  },
+  {
+    "repo": "modelcontextprotocol/servers",
+    "commit": "194cc86e3ae6400958555bd4116849d822d69263",
+    "layout": "subfolders only",
+    "expect": [
+      "mcp"
+    ],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "modelcontextprotocol/python-sdk",
+    "commit": "d7845c073a2b9ba5ab2817ecf93d3e45ef24cd14",
+    "layout": "root manifest",
+    "expect": [
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "mcp"
+    ]
+  },
+  {
+    "repo": "github/github-mcp-server",
+    "commit": "f2a07cd13243ea9773a0ef42692e5b0e156f0951",
+    "layout": "root manifest",
+    "expect": [
+      "mcp"
+    ],
+    "expectAtRoot": [
+      "mcp"
+    ]
+  },
+  {
+    "repo": "psf/requests",
+    "commit": "3c7baaa05ab4aa49cc819ce3a819d260de19c157",
+    "layout": "no agent SDK",
+    "expect": [],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "expressjs/express",
+    "commit": "1c6f1b0fe4000977b9a7b4f34097e4d527dd9824",
+    "layout": "no agent SDK",
+    "expect": [],
+    "expectAtRoot": []
+  },
+  {
+    "repo": "spf13/cobra",
+    "commit": "adbc8813901bba65827259daa8e22ff94ec1f30e",
+    "layout": "no agent SDK",
+    "expect": [],
+    "expectAtRoot": []
+  }
+]
