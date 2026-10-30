@@ -21,7 +21,7 @@ Requires Node.js 22 or later. Every install below downloads the release file fro
 ### Claude Code
 
 ```bash
-claude mcp add agent-reliability-skills -- npx -y https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0/agent-reliability-skills-0.1.0.tgz
+claude mcp add agent-reliability-skills -- npx -y https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.1/agent-reliability-skills-0.1.0-rc.1.tgz
 ```
 
 ### Cursor
@@ -33,7 +33,7 @@ Add to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for every pro
   "mcpServers": {
     "agent-reliability-skills": {
       "command": "npx",
-      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0/agent-reliability-skills-0.1.0.tgz"]
+      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.1/agent-reliability-skills-0.1.0-rc.1.tgz"]
     }
   }
 }
@@ -69,9 +69,9 @@ guesses from the server's working directory, because some clients start servers 
 
 | Client | Reports its workspace |
 |---|---|
-| Claude Code | RESULT-CLAUDE-CODE |
-| Cursor | RESULT-CURSOR |
-| Claude Desktop | RESULT-CLAUDE-DESKTOP |
+| Claude Code | pending |
+| Cursor | pending |
+| Claude Desktop | pending |
 
 ## Settings
 
@@ -95,7 +95,7 @@ caches. After that both work offline from cache. No `git` binary is needed.
 ## Download counts
 
 Each release attaches `agent-reliability-skills-<version>.tgz` and `checksums.txt`, and every install above
-downloads the `.tgz`, so GitHub counts it. RESULT-COUNT-MEANING A weekly workflow records the counts in
+downloads the `.tgz`, so GitHub counts it. pending. A weekly workflow records the counts in
 `.github/stats/download-history.json`. They are downloads, not users, and include automated installs such as CI.
 
 ## Releasing
