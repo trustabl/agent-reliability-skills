@@ -1,7 +1,8 @@
 // Runs the analyzer's `trustabl forge` and turns a failed run into text for
 // the caller. The CLI owns the lists of policy categories and languages and
 // its own error messages, so this file passes inputs and errors through
-// unchanged rather than validating or rewording them.
+// unchanged rather than validating or rewording them. The one exception, the
+// "no SDKs detected" advice, is translated for MCP in tool.js.
 import { execFile } from "node:child_process";
 
 export const CLI_TIMEOUT_MS = 120_000;

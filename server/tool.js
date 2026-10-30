@@ -59,6 +59,26 @@ export const TOOL_INPUT_SCHEMA = {
 
 const result = (texts, isError = false) => ({ content: texts.map((text) => ({ type: "text", text })), isError });
 
+// The CLI's "no SDKs detected" advice names its --policy flag. Over MCP the
+// fix is the policy input, so say that first and drop the CLI's command line.
+// The rest of the CLI's text, including its list of categories, is kept.
+const NO_SDK = /no SDKs detected/;
+const CLI_POLICY_ADVICE = /^\s*run 'trustabl forge --policy/;
+
+export function describeNoSdk({ code, stderr }) {
+  const cliText = stderr
+    .split("\n")
+    .filter((line) => !CLI_POLICY_ADVICE.test(line))
+    .join("\n")
+    .trim();
+  return (
+    "Forge found no supported agent SDK in this repository's dependency manifests. If the repository does use " +
+    `one, for example one declared only in a subfolder's manifest, call ${TOOL_NAME} again with the policy input ` +
+    'naming it, such as policy: ["mcp"].\n\n' +
+    `trustabl forge exited with code ${code}:\n${cliText}`
+  );
+}
+
 export function summary({ target, skill, written, note }) {
   const stamp = parseStamp(skill);
   const sdks = stamp ? stamp.sdks.join(", ") || "none listed" : "unavailable (the output has no Forge stamp)";
@@ -83,6 +103,7 @@ export async function forgeTool(input, { ensureBin, run, getRoots }) {
     }
 
     const ran = await run(bin, buildForgeArgs({ target, policy: input.policy, lang: input.lang }));
+    if (ran.code === 1 && NO_SDK.test(ran.stderr)) return result([describeNoSdk(ran)], true);
     if (ran.code !== 0) return result([describeFailure(ran)], true);
 
     const outputPath = input.output_path?.trim();

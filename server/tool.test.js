@@ -57,6 +57,27 @@ test("writes the skill when output_path is given", async () => {
   assert.match(texts(r)[0], new RegExp(`Written to: ${dest.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&")}`));
 });
 
+test("no SDK detected tells the agent to pass policy, not to run the CLI", async () => {
+  const stderr =
+    'trustabl forge: no SDKs detected in "/r" and no --policy specified\n' +
+    "  run 'trustabl forge --policy <category>' to specify one explicitly\n" +
+    "  accepted categories: [claude_sdk mcp]\n";
+  const r = await forgeTool({ path: repo() }, deps({ result: { code: 1, stdout: "", stderr, timedOut: false } }));
+  assert.equal(r.isError, true);
+  const text = texts(r)[0];
+  assert.match(text, /^Forge found no supported agent SDK/);
+  assert.match(text, /call trustabl_forge again with the policy input/);
+  assert.match(text, /no SDKs detected in "\/r"/);
+  assert.match(text, /accepted categories: \[claude_sdk mcp\]/);
+  assert.doesNotMatch(text, /run 'trustabl forge/);
+});
+
+test("other exit-1 errors pass through unchanged", async () => {
+  const stderr = "trustabl forge: detect SDKs: stat /r: no such file or directory\n";
+  const r = await forgeTool({ path: repo() }, deps({ result: { code: 1, stdout: "", stderr, timedOut: false } }));
+  assert.equal(texts(r)[0], `trustabl forge exited with code 1:\n${stderr.trim()}`);
+});
+
 test("a refused write is an error and leaves the file alone", async () => {
   const t = repo();
   fs.writeFileSync(path.join(t, "SKILL.md"), "mine\n");

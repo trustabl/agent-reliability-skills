@@ -21756,6 +21756,15 @@ var TOOL_INPUT_SCHEMA = {
   )
 };
 var result = (texts, isError = false) => ({ content: texts.map((text) => ({ type: "text", text })), isError });
+var NO_SDK = /no SDKs detected/;
+var CLI_POLICY_ADVICE = /^\s*run 'trustabl forge --policy/;
+function describeNoSdk({ code, stderr }) {
+  const cliText = stderr.split("\n").filter((line) => !CLI_POLICY_ADVICE.test(line)).join("\n").trim();
+  return `Forge found no supported agent SDK in this repository's dependency manifests. If the repository does use one, for example one declared only in a subfolder's manifest, call ${TOOL_NAME} again with the policy input naming it, such as policy: ["mcp"].
+
+trustabl forge exited with code ${code}:
+${cliText}`;
+}
 function summary({ target, skill, written, note }) {
   const stamp = parseStamp(skill);
   const sdks = stamp ? stamp.sdks.join(", ") || "none listed" : "unavailable (the output has no Forge stamp)";
@@ -21777,6 +21786,7 @@ async function forgeTool(input, { ensureBin, run, getRoots }) {
       throw new ToolError(`Could not install the trustabl binary: ${err.message}`);
     }
     const ran = await run(bin, buildForgeArgs({ target, policy: input.policy, lang: input.lang }));
+    if (ran.code === 1 && NO_SDK.test(ran.stderr)) return result([describeNoSdk(ran)], true);
     if (ran.code !== 0) return result([describeFailure(ran)], true);
     const outputPath = input.output_path?.trim();
     const written = outputPath ? writeSkill(target, outputPath, ran.stdout) : null;
