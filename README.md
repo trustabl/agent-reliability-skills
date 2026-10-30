@@ -1,9 +1,12 @@
 # Agent Reliability Skills MCP server
 
-Agent Reliability Skills writes a pre-coding reliability skill for **your** repository. It reads the repository's
-dependency manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod` and others), finds the agent
-SDKs it uses, and builds a `SKILL.md` from Trustabl's detection rules for exactly those SDKs. An agent that reads
-the skill applies the rules while it writes code, instead of meeting them later as findings in a scan.
+Forge Claude Code skills generate more reliable agents.
+
+Agent Reliability Skills is the MCP server for Trustabl Forge. It writes a pre-coding reliability skill for **your**
+repository: Forge reads the repository's dependency manifests (`package.json`, `pyproject.toml`, `requirements.txt`,
+`go.mod` and others), finds the agent SDKs it uses, and builds a `SKILL.md` from Trustabl's detection rules for
+exactly those SDKs. An agent that reads the skill applies the rules while it writes code, instead of meeting them
+later as findings in a scan.
 
 The skill is generated per repository. It is not a fixed skill to install, and it changes as your dependencies
 and Trustabl's rules change.

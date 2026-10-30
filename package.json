@@ -11,7 +11,7 @@
     "README.md",
     "LICENSE"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/trustabl/agent-reliability-skills.git"
