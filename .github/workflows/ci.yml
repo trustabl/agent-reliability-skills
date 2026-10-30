@@ -59,8 +59,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          # Without this, setup-node takes whatever 22.x the runner has cached.
+          # The integration test's offline check needs 22.21 or later, the
+          # first release whose fetch honors the proxy variables.
+          check-latest: true
           cache: npm
           cache-dependency-path: server/package-lock.json
+      - name: Node version
+        run: node --version
       - name: Install
         working-directory: server
         run: npm ci

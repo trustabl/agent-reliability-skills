@@ -194,7 +194,15 @@ try {
   {
     const { client } = await start({ serverPath, env: offlineEnv(home, proxy.url) });
     const res = await client.call({ path: fixture });
-    check(proxy.hosts.length > 0, `offline: connections went to the blocking proxy (${[...new Set(proxy.hosts)].join(", ")})`);
+    // Node's fetch honors the proxy variables only from Node 22.21 and 24.0
+    // (NODE_USE_ENV_PROXY). On an older Node the server's lookup bypasses the
+    // proxy, reaches GitHub, and nothing here is offline.
+    check(
+      proxy.hosts.includes("api.github.com:443"),
+      `offline: the server's GitHub lookup went to the blocking proxy (Node ${process.version}; needs 22.21 or later); ` +
+        `seen: ${[...new Set(proxy.hosts)].join(", ") || "none"}`,
+    );
+    check(proxy.hosts.includes("github.com:443"), "offline: the analyzer's rules fetch went to the blocking proxy");
     check(!res.isError, `offline: a warm cache still generates the skill${res.isError ? ` (${text(res)})` : ""}`);
     check(stampedSdks(res.content[1]?.text)?.includes("claude_sdk"), "offline: the skill is stamped with claude_sdk");
     check(client.stderr.includes("could not reach GitHub"), "offline: the server says it used the cached analyzer");
