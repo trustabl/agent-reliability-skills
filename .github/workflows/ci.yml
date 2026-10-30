@@ -2,9 +2,10 @@ name: CI
 
 # dist/index.js is committed and package.json "bin" points straight at it, so a
 # stale bundle ships a broken server to everyone who installs a release. The
-# bundle job catches that; the test job runs the unit tests and the stdio smoke
-# test on all three operating systems the server supports, on the oldest Node
-# it supports (package.json "engines") and the current LTS.
+# bundle job catches that; the test job runs the unit tests, the stdio smoke
+# test and the integration test on all three operating systems the server
+# supports, on the oldest Node it supports (package.json "engines") and the
+# current LTS.
 
 on:
   push:
@@ -70,3 +71,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/smoke.mjs
+      - name: Integration test (packed npx install, output_path, no SDK, pinned version, offline)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/integration.mjs

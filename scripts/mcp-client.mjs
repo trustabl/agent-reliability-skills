@@ -6,12 +6,14 @@ import { pathToFileURL } from "node:url";
 
 export class Client {
   // roots: directories to report through MCP roots, or null to not declare the capability.
-  constructor({ serverPath, env, roots = null, echoStderr = true }) {
+  // command/args start the server some other way than `node <serverPath>`, such as npx.
+  constructor({ serverPath, command, args = [], shell = false, env, roots = null, echoStderr = true }) {
     this.roots = roots;
     this.nextId = 1;
     this.pending = new Map();
     this.stderr = "";
-    this.proc = spawn(process.execPath, [serverPath], { env, stdio: ["pipe", "pipe", "pipe"] });
+    const [cmd, argv] = command ? [command, args] : [process.execPath, [serverPath]];
+    this.proc = spawn(cmd, argv, { env, shell, stdio: ["pipe", "pipe", "pipe"] });
     let buf = "";
     this.proc.stdout.setEncoding("utf8");
     this.proc.stdout.on("data", (chunk) => {
