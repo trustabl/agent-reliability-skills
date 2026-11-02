@@ -1,6 +1,6 @@
 {
   "name": "agent-reliability-skills",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.1",
   "description": "MCP server that generates a pre-coding reliability skill (SKILL.md) for your agent repository with Trustabl Forge",
   "type": "module",
   "bin": {
