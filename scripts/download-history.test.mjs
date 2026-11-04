@@ -103,7 +103,7 @@ test("counts only the package file, skips drafts, and labels the unit", { skip: 
   assert.equal(history.unit, "cumulative_release_downloads");
   assert.match(history.note, /not users/);
   assert.deepEqual(history.history, [
-    { date: "2026-10-26", total: 37, releases: { "v0.0.9": 0, "v0.1.0": 30, "v0.1.1": 7 } },
+    { date: "2026-10-26", downloads: 37, releases: { "v0.0.9": 0, "v0.1.0": 30, "v0.1.1": 7 } },
   ]);
   assert.match(stdout, /= 37 cumulative package downloads across 3 releases/);
 });
@@ -118,7 +118,7 @@ test("a same-day rerun replaces that day's entry", { skip: !python }, () => {
   snapshot(dir, { pages: [PAGE], today: "2026-10-26" });
   const later = [release("v0.1.0", [asset("agent-reliability-skills-0.1.0.tgz", 41)])];
   const { history } = snapshot(dir, { pages: [later], today: "2026-10-26" });
-  assert.deepEqual(history.history, [{ date: "2026-10-26", total: 41, releases: { "v0.1.0": 41 } }]);
+  assert.deepEqual(history.history, [{ date: "2026-10-26", downloads: 41, releases: { "v0.1.0": 41 } }]);
 });
 
 test("earlier entries are kept unchanged and stay in date order", { skip: !python }, () => {
@@ -127,7 +127,7 @@ test("earlier entries are kept unchanged and stay in date order", { skip: !pytho
   const week2 = [release("v0.1.0", [asset("agent-reliability-skills-0.1.0.tgz", 55)])];
   const { history } = snapshot(dir, { pages: [week2], today: "2026-11-02" });
   assert.deepEqual(
-    history.history.map((e) => [e.date, e.total]),
+    history.history.map((e) => [e.date, e.downloads]),
     [["2026-10-26", 37], ["2026-11-02", 55]],
   );
   assert.deepEqual(history.history[0].releases, { "v0.0.9": 0, "v0.1.0": 30, "v0.1.1": 7 });
@@ -139,7 +139,7 @@ test("reads every page of releases", { skip: !python }, () => {
   assert.equal(seen.length, 2);
   assert.match(seen[1].url, /\/repos\/trustabl\/agent-reliability-skills\/releases\?per_page=100&page=2$/);
   assert.equal(Object.keys(history.history[0].releases).length, 101);
-  assert.equal(history.history[0].total, 105);
+  assert.equal(history.history[0].downloads, 105);
 });
 
 test("sends the token only when one is set", { skip: !python }, () => {

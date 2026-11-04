@@ -11,8 +11,7 @@ on:
   workflow_dispatch:           # run on demand to add an entry now
 
 permissions:
-  contents: write              # push the snapshot branch the PR is built from
-  pull-requests: write         # open/update the snapshot PR
+  contents: write              # commit the snapshot to main
 
 jobs:
   snapshot:
@@ -72,9 +71,11 @@ jobs:
               data = {"history": []}
 
           hist = {p["date"]: p for p in data.get("history", [])}
+          # "date" and "downloads" match the probe's history format
+          # (agent-network-access-probe); "releases" is Forge's per-release split.
           hist[day] = {
               "date": day,
-              "total": sum(releases.values()),
+              "downloads": sum(releases.values()),
               "releases": {tag: releases[tag] for tag in sorted(releases)},
           }
           out = {
@@ -88,24 +89,21 @@ jobs:
           with open(path, "w") as f:
               json.dump(out, f, indent=2)
               f.write("\n")
-          print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["total"], len(releases)))
+          print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
           PY
 
-      # Changes land through one rolling PR, so this works when main requires
-      # pull requests. The PR accumulates snapshots until merged and no-ops when
-      # the JSON is unchanged.
-      - name: Open or update the snapshot PR
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          add-paths: .github/stats/download-history.json
-          branch: chore/download-history
-          base: main
-          commit-message: "chore: record weekly download snapshot"
-          title: "chore: weekly download-history snapshot"
-          body: |
-            Automated weekly snapshot of cumulative downloads of the agent-reliability-skills package file.
-            Updates `.github/stats/download-history.json`. These are downloads, not users.
-          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          delete-branch: false
+      # main is not branch-protected, so the snapshot is committed straight to
+      # it, as the probe does. Each run builds on the committed file, so no
+      # week's entry waits on (or is lost with) an unmerged PR. If main ever
+      # requires pull requests, this push fails and needs another route.
+      - name: Commit the snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/stats/download-history.json
+          if git diff --cached --quiet; then
+            echo "No change in downloads since the last snapshot."
+            exit 0
+          fi
+          git commit -m "chore: record weekly download snapshot"
+          git push
