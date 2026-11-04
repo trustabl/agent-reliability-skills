@@ -1,0 +1,12 @@
+{
+  "repo": "trustabl/agent-reliability-skills",
+  "unit": "cumulative_release_downloads",
+  "note": "Downloads of the release package file, not users. Includes automated installs such as CI.",
+  "history": [
+    {
+      "date": "2026-11-04",
+      "downloads": 0,
+      "releases": {}
+    }
+  ]
+}
