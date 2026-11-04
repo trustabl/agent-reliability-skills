@@ -5,8 +5,10 @@
   "history": [
     {
       "date": "2026-11-04",
-      "downloads": 0,
-      "releases": {}
+      "downloads": 2,
+      "releases": {
+        "v0.1.0-rc.1": 2
+      }
     }
   ]
 }
