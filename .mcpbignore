@@ -1,0 +1,15 @@
+# What goes into the .mcpb bundle: manifest.json, package.json (the server is
+# ESM and reads its version from it), dist/, icon.png, README.md and LICENSE.
+.git/
+.github/
+server/
+scripts/
+testdata/
+node_modules/
+*.tgz
+*.mcpb
+*.sha256
+checksums.txt
+server.json
+mcp.json
+SECURITY.md

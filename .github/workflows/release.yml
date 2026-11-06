@@ -3,6 +3,11 @@ name: Release
 # On a v* tag: verify the bundle and versions, pack the server, and publish the
 # package file with its checksum on the GitHub release. Installs download that
 # file, so GitHub counts them (TR-1309).
+#
+# The same release also ships the server as an MCP Bundle (.mcpb, for Claude
+# Desktop and Smithery), a filled-in server.json for the MCP Registry, and,
+# once the repository has an NPM_TOKEN secret, the npm package
+# @trustabl/agent-reliability-skills.
 
 on:
   push:
@@ -10,10 +15,14 @@ on:
 
 permissions:
   contents: write
+  id-token: write    # npm provenance
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      # npm publishing (below) runs only once this repository has the secret.
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,10 +78,42 @@ jobs:
           sha256sum "$file" > checksums.txt
           cat checksums.txt
           echo "PACKAGE=$file" >> "$GITHUB_ENV"
+      # The server as an MCP Bundle, and the MCP Registry record for this
+      # release, ready for mcp-publisher. .mcpbignore keeps the bundle to the
+      # runtime files. The bundle is a release file, so GitHub counts it too.
+      - name: Bundle and registry record
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json'));m.version=process.argv[1];fs.writeFileSync('manifest.json',JSON.stringify(m,null,2)+'\n')" "$v"
+          b="agent-reliability-skills-$v.mcpb"
+          npx -y @anthropic-ai/mcpb@2.1.2 pack . "$b"
+          sha256sum "$b" >> checksums.txt
+          node -e "const fs=require('fs');const [v,b,sha]=process.argv.slice(1);const s=JSON.parse(fs.readFileSync('server.json'));s.version=v;const p=s.packages[0];p.version=v;p.identifier='https://github.com/trustabl/agent-reliability-skills/releases/download/v'+v+'/'+b;p.fileSha256=sha;fs.writeFileSync('server.json',JSON.stringify(s,null,2)+'\n')" "$v" "$b" "$(sha256sum "$b" | cut -d' ' -f1)"
+          echo "BUNDLE=$b" >> "$GITHUB_ENV"
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           flags=""
           case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" "$PACKAGE" checksums.txt --title "$GITHUB_REF_NAME" --generate-notes $flags
+          gh release create "$GITHUB_REF_NAME" "$PACKAGE" "$BUNDLE" checksums.txt --title "$GITHUB_REF_NAME" --generate-notes $flags
+      # npm under our @trustabl scope, so `npx -y @trustabl/agent-reliability-skills`
+      # works in every client and the registry record gains an npm package.
+      # package.json's mcpName proves registry ownership. The repository keeps
+      # the unscoped name so the release file keeps its counted name.
+      # A pre-release goes to the "next" tag, so `latest` only moves on a release.
+      - name: Publish to npm
+        if: env.HAS_NPM_TOKEN == 'true'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          npm pkg set name=@trustabl/agent-reliability-skills
+          tag=latest
+          case "$GITHUB_REF_NAME" in *-*) tag=next ;; esac
+          npm publish --provenance --access public --tag "$tag"
+          node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('server.json'));s.packages.unshift({registryType:'npm',identifier:'@trustabl/agent-reliability-skills',version:s.version,transport:{type:'stdio'}});fs.writeFileSync('server.json',JSON.stringify(s,null,2)+'\n')"
+      - name: Attach the registry record
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" server.json
