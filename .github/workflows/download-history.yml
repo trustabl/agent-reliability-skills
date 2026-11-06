@@ -4,6 +4,12 @@ name: Download history
 # GitHub exposes only the current total per release asset (download_count),
 # with no history, so each run records one dated entry and commits it.
 # A same-day rerun replaces that day's entry; earlier entries are never changed.
+#
+# The snapshot lands via a pull request, the same way trustabl/agent-reliability-analyzer
+# does it: create-pull-request reuses ONE rolling branch/PR and updates it each run -- a
+# single PR that accumulates snapshots until merged, not one per week -- and no-ops when the
+# JSON is unchanged. This keeps the history reviewable and keeps working if main is ever
+# branch-protected (a direct push would then fail with GH013).
 
 on:
   schedule:
@@ -11,7 +17,8 @@ on:
   workflow_dispatch:           # run on demand to add an entry now
 
 permissions:
-  contents: write              # commit the snapshot to main
+  contents: write              # push the snapshot branch the PR is built from
+  pull-requests: write         # open/update the snapshot PR
 
 jobs:
   snapshot:
@@ -92,18 +99,22 @@ jobs:
           print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
           PY
 
-      # main is not branch-protected, so the snapshot is committed straight to
-      # it, as the probe does. Each run builds on the committed file, so no
-      # week's entry waits on (or is lost with) an unmerged PR. If main ever
-      # requires pull requests, this push fails and needs another route.
-      - name: Commit the snapshot
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/stats/download-history.json
-          if git diff --cached --quiet; then
-            echo "No change in downloads since the last snapshot."
-            exit 0
-          fi
-          git commit -m "chore: record weekly download snapshot"
-          git push
+      # main requires PRs on the analyzer; here it does not yet, but the snapshot
+      # still lands via a PR so both repos behave the same and this keeps working
+      # if main is ever protected. create-pull-request reuses ONE rolling
+      # branch/PR, updates it each run, and no-ops when the JSON is unchanged.
+      - name: Open or update the snapshot PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: .github/stats/download-history.json
+          branch: chore/download-history
+          base: main
+          commit-message: "chore: record weekly download snapshot"
+          title: "chore: weekly download-history snapshot"
+          body: |
+            Automated weekly snapshot of cumulative release-asset downloads.
+            Updates `.github/stats/download-history.json` — safe to merge.
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          delete-branch: false
