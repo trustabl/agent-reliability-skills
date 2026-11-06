@@ -5,9 +5,9 @@ name: Release
 # file, so GitHub counts them (TR-1309).
 #
 # The same release also ships the server as an MCP Bundle (.mcpb, for Claude
-# Desktop and Smithery), a filled-in server.json for the MCP Registry, and,
-# once the repository has an NPM_TOKEN secret, the npm package
-# @trustabl/agent-reliability-skills.
+# Desktop and Smithery), the npm package @trustabl/agent-reliability-skills
+# (once the repository has an NPM_TOKEN secret), and a filled-in server.json,
+# which it publishes to the MCP Registry.
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write    # npm provenance
+  id-token: write    # npm provenance and the MCP Registry login
 
 jobs:
   release:
@@ -117,3 +117,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$GITHUB_REF_NAME" server.json
+      # The MCP Registry, with no device code: GitHub's OIDC token shows this
+      # run belongs to a trustabl repository, which owns io.github.trustabl/*.
+      # The registry checks the npm package's mcpName, so wait until npm serves
+      # the new version first (it can take a few minutes after publishing).
+      - name: Publish to the MCP Registry
+        run: |
+          if [ "$HAS_NPM_TOKEN" = "true" ]; then
+            v="${GITHUB_REF_NAME#v}"
+            for i in $(seq 1 30); do
+              curl -sf "https://registry.npmjs.org/@trustabl%2fagent-reliability-skills/$v" | grep -q '"mcpName"' && break
+              echo "waiting for npm to serve $v ($i/30)"; sleep 10
+            done
+          fi
+          base=https://github.com/modelcontextprotocol/registry/releases/download/v1.8.7
+          curl -sSLO "$base/mcp-publisher_linux_amd64.tar.gz"
+          curl -sSL "$base/registry_1.8.7_checksums.txt" | grep " mcp-publisher_linux_amd64.tar.gz$" | sha256sum -c -
+          tar -xzf mcp-publisher_linux_amd64.tar.gz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish server.json
