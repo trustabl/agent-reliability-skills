@@ -69,7 +69,7 @@ guesses from the server's working directory, because some clients start servers 
 
 | Client | Reports its workspace |
 |---|---|
-| Claude Code | pending |
+| Claude Code | Yes (checked with 2.1.310) |
 | Cursor | pending |
 | Claude Desktop | pending |
 
@@ -95,8 +95,9 @@ caches. After that both work offline from cache. No `git` binary is needed.
 ## Download counts
 
 Each release attaches `agent-reliability-skills-<version>.tgz` and `checksums.txt`, and every install above
-downloads the `.tgz`, so GitHub counts it. pending. A weekly workflow records the counts in
-`.github/stats/download-history.json`. They are downloads, not users, and include automated installs such as CI.
+downloads the `.tgz`, so GitHub counts it: installing v0.1.0-rc.1 raised the `.tgz` count. A weekly workflow
+records the counts in `.github/stats/download-history.json`. They are downloads, not users, and include automated
+installs such as CI.
 
 ## Releasing
 
