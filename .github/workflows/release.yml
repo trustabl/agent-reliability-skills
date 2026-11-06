@@ -72,6 +72,15 @@ jobs:
               fi
               ;;
           esac
+      # The Claude Directory needs the plugin to launch an exact npm version, so
+      # plugin/ pins one. It can only point at a version npm already has, so it
+      # is bumped in a follow-up pull request once this release is published.
+      - name: Check the plugin's pinned version
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          for f in plugin/.mcp.json plugin/mcp.json; do
+            grep -q "@trustabl/agent-reliability-skills@$v\"" "$f" || echo "::warning file=$f::pins a different version than $GITHUB_REF_NAME; after this release, update it to @$v"
+          done
       - name: Pack
         run: |
           file=$(npm pack --silent | tail -1)

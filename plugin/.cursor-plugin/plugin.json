@@ -1,0 +1,11 @@
+{
+  "name": "agent-reliability-skills",
+  "description": "Generates a pre-coding reliability skill (SKILL.md) for your agent repository from Trustabl's detection rules for the agent SDKs it uses, so your coding agent applies them while it writes code. No API key needed.",
+  "version": "0.1.0-rc.2",
+  "author": { "name": "Trustabl" },
+  "logo": "assets/logo.png",
+  "homepage": "https://trustabl.ai",
+  "repository": "https://github.com/trustabl/agent-reliability-skills",
+  "keywords": ["mcp", "agents", "reliability", "skills", "agent-sdk"],
+  "mcpServers": "mcp.json"
+}
