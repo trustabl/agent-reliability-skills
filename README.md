@@ -21,7 +21,7 @@ Requires Node.js 22 or later. Every install below downloads the release file fro
 ### Claude Code
 
 ```bash
-claude mcp add agent-reliability-skills -- npx -y https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.1/agent-reliability-skills-0.1.0-rc.1.tgz
+claude mcp add agent-reliability-skills -- npx -y https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.2/agent-reliability-skills-0.1.0-rc.2.tgz
 ```
 
 ### Cursor
@@ -33,7 +33,7 @@ Add to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for every pro
   "mcpServers": {
     "agent-reliability-skills": {
       "command": "npx",
-      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.1/agent-reliability-skills-0.1.0-rc.1.tgz"]
+      "args": ["-y", "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.1.0-rc.2/agent-reliability-skills-0.1.0-rc.2.tgz"]
     }
   }
 }
