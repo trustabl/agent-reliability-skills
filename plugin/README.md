@@ -4,6 +4,12 @@ A plugin for Claude Code and Cursor that adds the Agent Reliability Skills MCP s
 agent uses it to generate a pre-coding reliability skill for your repository, so it applies Trustabl's rules while
 it writes code instead of meeting them later as scan findings.
 
+Install in Claude Code:
+
+```
+/plugin install agent-reliability-skills --marketplace trustabl/agent-reliability-skills
+```
+
 ## What it does
 
 - Reads your repository's dependency manifests (`package.json`, `pyproject.toml`, `requirements.txt`, `go.mod` and
