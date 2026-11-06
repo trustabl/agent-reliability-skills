@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.trustabl/agent-reliability-skills",
+  "title": "Agent Reliability Skills",
+  "description": "Generates a pre-coding reliability skill (SKILL.md) for your agent repo from Trustabl's rules.",
+  "version": "0.0.0",
+  "websiteUrl": "https://trustabl.ai",
+  "repository": {
+    "url": "https://github.com/trustabl/agent-reliability-skills",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/trustabl/agent-reliability-skills/releases/download/v0.0.0/agent-reliability-skills-0.0.0.mcpb",
+      "version": "0.0.0",
+      "fileSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

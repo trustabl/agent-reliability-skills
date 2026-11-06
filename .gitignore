@@ -1,4 +1,5 @@
 node_modules/
 *.tgz
+*.mcpb
 checksums.txt
 .DS_Store

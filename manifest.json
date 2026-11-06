@@ -1,0 +1,44 @@
+{
+  "manifest_version": "0.3",
+  "name": "agent-reliability-skills",
+  "display_name": "Agent Reliability Skills",
+  "version": "0.0.0",
+  "description": "Generates a pre-coding reliability skill (SKILL.md) for your agent repository from Trustabl's detection rules.",
+  "long_description": "Agent Reliability Skills is the MCP server for Trustabl Forge. It reads your repository's dependency manifests, finds the agent SDKs it uses (Claude Agent SDK, OpenAI Agents SDK, Google ADK, MCP, LangChain, CrewAI, Pydantic AI, Vercel AI SDK, AutoGen and more), and builds a SKILL.md from Trustabl's detection rules for exactly those SDKs, so your coding agent applies them while it writes code. It runs the open-source Trustabl analyzer, downloaded on first use and sha256-verified against the release checksums. No API key needed.",
+  "author": {
+    "name": "Trustabl",
+    "url": "https://trustabl.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trustabl/agent-reliability-skills"
+  },
+  "homepage": "https://trustabl.ai",
+  "documentation": "https://github.com/trustabl/agent-reliability-skills#readme",
+  "support": "https://github.com/trustabl/agent-reliability-skills/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {}
+    }
+  },
+  "tools": [
+    {
+      "name": "trustabl_forge",
+      "description": "Generate a pre-coding reliability skill (SKILL.md) for a repository from Trustabl's detection rules for the agent SDKs it uses."
+    }
+  ],
+  "keywords": ["mcp", "agents", "reliability", "skills", "claude-code", "agent-sdk"],
+  "license": "Apache-2.0",
+  "privacy_policies": ["https://trustabl.ai/privacy/"],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  }
+}
