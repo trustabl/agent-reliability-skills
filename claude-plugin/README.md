@@ -23,10 +23,10 @@ Use it with `/agent-reliability-skills:forge [repo]`, or ask Claude for a reliab
 
 ## How it runs
 
-The plugin has no MCP server. At session start it installs the pinned open-source
-[Trustabl analyzer](https://github.com/trustabl/agent-reliability-analyzer), which runs `trustabl forge`, into the
-plugin's own data folder, after checking it against the release's `checksums.txt` (a mismatch installs nothing), and
-Claude runs it with the Bash tool. It works on macOS, Linux and Windows (Git Bash). For Cursor and other MCP clients,
+The plugin has no MCP server, hooks or scripts. On first use, Claude runs a short install block from the skill
+that downloads the pinned open-source [Trustabl analyzer](https://github.com/trustabl/agent-reliability-analyzer),
+which runs `trustabl forge`, into `~/.trustabl/cli/`, after checking it against the release's `checksums.txt` (a
+mismatch installs nothing), and then runs it with the Bash tool. It works on macOS, Linux and Windows (Git Bash). For Cursor and other MCP clients,
 use the MCP server instead: [plugin/README.md](../plugin/README.md).
 
 ## Requirements
@@ -40,7 +40,7 @@ Nothing beyond Claude Code.
 - **Your code:** read on your machine (only the dependency manifests are needed) and never uploaded.
 - **Network access:** only GitHub, to download the analyzer release and Trustabl's rules repository. After that it
   works offline from cache.
-- **Storage:** the analyzer binary in the plugin's data folder, the analyzer's rules cache, and the `SKILL.md` it
+- **Storage:** the analyzer binary in `~/.trustabl/cli/`, the analyzer's rules cache, and the `SKILL.md` it
   writes into your repository. Delete any of them at any time.
 - **Third parties:** nothing is shared with Trustabl or anyone else.
 - **Trustabl's privacy policy** (for its hosted services): https://trustabl.ai/privacy/

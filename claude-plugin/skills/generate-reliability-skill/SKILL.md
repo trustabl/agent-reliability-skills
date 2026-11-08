@@ -17,14 +17,36 @@ those SDKs. It makes no model call and needs no API key.
 
 ## Run it
 
-The `SessionStart` hook installs the pinned Trustabl analyzer (checksum-verified)
-and exports it as `$FORGE_BIN`; when that is empty, use `trustabl` on `PATH`
-(0.1.14 or later).
+Forge is part of the open-source Trustabl analyzer (`trustabl forge`, 0.1.14 or later).
+
+The plugin ships no scripts. Run this block with the Bash tool: it downloads the pinned release from GitHub,
+checks it against the release's `checksums.txt` (a mismatch installs nothing), keeps it in `~/.trustabl/cli/`, and
+prints `TRUSTABL_BIN=<path>`. Later runs only check the version, so run it at the start of each session that uses
+Forge. Tell the user what it downloads the first time. If the user already has `trustabl` 0.1.14 or later on `PATH` (`trustabl version`), use that instead.
 
 ```bash
-"${FORGE_BIN:-trustabl}" forge <repo>                               # detected SDKs only
-"${FORGE_BIN:-trustabl}" forge <repo> --policy mcp,openai_sdk       # add SDK categories not yet in a manifest
-"${FORGE_BIN:-trustabl}" forge <repo> --lang python,typescript      # add languages: python, typescript, go
+V=0.1.15; D="$HOME/.trustabl/cli/v$V"
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) OS=windows; EXT=zip; EXE=trustabl.exe ;; Darwin) OS=darwin; EXT=tar.gz; EXE=trustabl ;; *) OS=linux; EXT=tar.gz; EXE=trustabl ;; esac
+case "$(uname -m)" in arm64|aarch64) ARCH=arm64 ;; *) ARCH=amd64 ;; esac; [ "$OS" = windows ] && ARCH=amd64
+TRUSTABL_BIN="$D/$EXE"
+if ! "$TRUSTABL_BIN" version 2>/dev/null | head -n1 | grep -q "$V\$"; then
+  A="trustabl_${V}_${OS}_${ARCH}.$EXT"; U="https://github.com/trustabl/agent-reliability-analyzer/releases/download/v$V"; T="$(mktemp -d)"
+  curl -fsSL "$U/$A" -o "$T/$A" && curl -fsSL "$U/checksums.txt" -o "$T/checksums.txt" &&
+  SUM=sha256sum; command -v sha256sum >/dev/null || SUM="shasum -a 256"
+  (cd "$T" && L="$(grep " $A\$" checksums.txt)" && [ -n "$L" ] && echo "$L" | $SUM -c -) &&
+  mkdir -p "$D" && if [ "$EXT" = zip ]; then unzip -oq "$T/$A" -d "$D"; else tar -xzf "$T/$A" -C "$D"; fi &&
+  chmod +x "$TRUSTABL_BIN"; rm -rf "$T"
+fi
+if "$TRUSTABL_BIN" version 2>/dev/null | head -n1 | grep -q "$V\$"; then echo "TRUSTABL_BIN=$TRUSTABL_BIN"; else echo "install failed: see the message above"; fi
+```
+
+Shell state does not carry between Bash calls: start each later command with `TRUSTABL_BIN="<the printed path>";`.
+If the block prints `install failed`, show the user the message above it and stop.
+
+```bash
+"$TRUSTABL_BIN" forge <repo>                               # detected SDKs only
+"$TRUSTABL_BIN" forge <repo> --policy mcp,openai_sdk       # add SDK categories not yet in a manifest
+"$TRUSTABL_BIN" forge <repo> --lang python,typescript      # add languages: python, typescript, go
 ```
 
 `<repo>` is `.` unless the user named another directory. The SKILL.md goes to
