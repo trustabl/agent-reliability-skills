@@ -1,0 +1,104 @@
+# Opens a pull request when the analyzer publishes a release newer than the one
+# Forge pins: DEFAULT_ANALYZER_VERSION in server/version.js (what the MCP
+# server runs when TRUSTABL_VERSION is not set) and V= in the Claude plugin's
+# generate-reliability-skill install block.
+#
+# This exists because the alternative is remembering. A pull request is the
+# cheapest thing that makes the gap visible without taking the choice away:
+# nothing changes until a human merges it.
+name: engine-bump
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'     # Mondays, 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CURRENT=$(sed -n 's/^export const DEFAULT_ANALYZER_VERSION = "\([0-9][0-9.]*\)";.*/\1/p' server/version.js)
+          [ -n "$CURRENT" ] || { echo "::error::no DEFAULT_ANALYZER_VERSION in server/version.js"; exit 1; }
+          RELEASE=$(gh api repos/trustabl/agent-reliability-analyzer/releases/latest)
+          LATEST=$(echo "$RELEASE" | jq -r '.tag_name | ltrimstr("v")')
+          HAS_SUMS=$(echo "$RELEASE" | jq -r 'any(.assets[]; .name == "checksums.txt")')
+          echo "Pinned $CURRENT, latest $LATEST (checksums.txt published: $HAS_SUMS)"
+          BUMP=false
+          # Only a newer release, and only once its checksums.txt is up: the
+          # server and the skill both refuse a download they cannot verify.
+          if [ "$LATEST" != "$CURRENT" ] && [ "$HAS_SUMS" = true ] &&
+             [ "$(printf '%s\n%s\n' "$CURRENT" "$LATEST" | sort -V | tail -n1)" = "$LATEST" ]; then
+            BUMP=true
+          fi
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST"   >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP"       >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        if: steps.versions.outputs.bump == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - id: bump
+        name: Bump the pins, the plugin version and the bundle
+        if: steps.versions.outputs.bump == 'true'
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: |
+          V='[0-9]+\.[0-9]+\.[0-9]+'
+          sed -i -E "s/^(export const DEFAULT_ANALYZER_VERSION = \")$V(\";)/\1$LATEST\2/" server/version.js
+          sed -i -E "s/^(\| \`TRUSTABL_VERSION\` \| \`v)$V(\` \|)/\1$LATEST\2/" README.md
+          sed -i -E "s/^V=$V;/V=$LATEST;/" claude-plugin/skills/generate-reliability-skill/SKILL.md
+          # The Claude Directory only picks up a plugin change when its version
+          # changes: bump the last number (0.1.0-rc.5 -> rc.6, 0.2.0 -> 0.2.1).
+          PLUGIN=$(node -e '
+            const fs = require("fs");
+            const f = "claude-plugin/.claude-plugin/plugin.json";
+            let next;
+            const text = fs.readFileSync(f, "utf8").replace(/("version":\s*")([^"]*\D)(\d+)(")/, (m, a, head, n, b) => {
+              next = head + (Number(n) + 1);
+              return a + next + b;
+            });
+            if (!next) throw new Error(`no version in ${f}`);
+            fs.writeFileSync(f, text);
+            console.log(next);
+          ')
+          echo "plugin=$PLUGIN" >> "$GITHUB_OUTPUT"
+          # dist/index.js is committed and CI checks it matches server/.
+          (cd server && npm ci && npm run build)
+          git diff --stat
+      - uses: peter-evans/create-pull-request@v7
+        if: steps.versions.outputs.bump == 'true'
+        with:
+          branch: chore/analyzer-${{ steps.versions.outputs.latest }}
+          title: "chore(deps): pin the analyzer to ${{ steps.versions.outputs.latest }}"
+          commit-message: "chore(deps): pin the analyzer to ${{ steps.versions.outputs.latest }}"
+          body: |
+            The analyzer released `${{ steps.versions.outputs.latest }}`; Forge pins
+            `${{ steps.versions.outputs.current }}`.
+
+            This pull request moves:
+            - `DEFAULT_ANALYZER_VERSION` in `server/version.js` (the MCP server's default when
+              `TRUSTABL_VERSION` is not set), the README settings row, and the rebuilt
+              `dist/index.js`;
+            - `V=` in the Claude plugin's `generate-reliability-skill` install block, and the plugin
+              version to `${{ steps.bump.outputs.plugin }}` so the Claude Directory picks the change up.
+
+            Both downloads are still verified against the release's `checksums.txt`. Merging
+            publishes nothing: the server default reaches users with the next `v*` tag.
+
+            Before merging:
+            - CI does not start on its own for a pull request opened by this workflow (GitHub
+              does not trigger workflows from `GITHUB_TOKEN` events). Close and reopen the pull
+              request to run it.
+            - Read the analyzer's release notes: a release that changes `trustabl forge` output may
+              need the server or the skill updating in the same pull request.

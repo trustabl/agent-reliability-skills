@@ -77,7 +77,7 @@ guesses from the server's working directory, because some clients start servers 
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `TRUSTABL_VERSION` | `latest` | Analyzer release to run, for example `v0.1.15`. Must be `v0.1.14` or later. |
+| `TRUSTABL_VERSION` | `v0.1.16` | Analyzer release to run. Unset runs the release this server version pins; set a tag (for example `v0.1.15`, `v0.1.14` or later) or `latest` for the newest release. |
 | `GITHUB_TOKEN` | unset | Used only to download the analyzer. Avoids GitHub's anonymous limit of 60 requests an hour. |
 | `TRUSTABL_BIN` | unset | Path to a local `trustabl` build to run instead of downloading one. |
 
