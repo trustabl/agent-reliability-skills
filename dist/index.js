@@ -22001,7 +22001,7 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
 }
 
 // index.js
-var VERSION = true ? "0.1.0-rc.2" : "dev";
+var VERSION = true ? "0.1.0-rc.3" : "dev";
 var log = (msg) => process.stderr.write(`[agent-reliability-skills] ${msg}
 `);
 var server = new McpServer({ name: "agent-reliability-skills", version: VERSION });
