@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
+import { DEFAULT_ANALYZER_VERSION, MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
 
 test("the floor is 0.1.14, the first analyzer with forge --lang", () => {
   assert.equal(MIN_ANALYZER_VERSION, "0.1.14");
+});
+
+test("the default is an exact release (no v, no pre-release) that meets the floor", () => {
+  assert.match(DEFAULT_ANALYZER_VERSION, /^\d+\.\d+\.\d+$/);
+  assert.equal(meetsMinimum(DEFAULT_ANALYZER_VERSION), true);
 });
 
 test("meetsMinimum accepts the floor and anything newer", () => {

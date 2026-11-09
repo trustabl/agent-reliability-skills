@@ -1,7 +1,8 @@
 // Resolves the analyzer `trustabl` binary that runs `trustabl forge`.
 //
 // Order: TRUSTABL_BIN override -> the release named by TRUSTABL_VERSION
-// (default: latest), downloaded for this OS/arch, sha256-verified against the
+// (default: DEFAULT_ANALYZER_VERSION in version.js; "latest" looks up the
+// newest release), downloaded for this OS/arch, sha256-verified against the
 // release checksums.txt, and cached under ~/.agent-reliability-skills/<version>/.
 //
 // Adapted from trustabl-cursor/server/trustabl-bin.js. Unlike it:
@@ -21,10 +22,12 @@ import os from "node:os";
 import path from "node:path";
 
 import { setting } from "./settings.js";
-import { MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
+import { DEFAULT_ANALYZER_VERSION, MIN_ANALYZER_VERSION, compareTags, meetsMinimum, normalizeTag } from "./version.js";
 
 const REPO = "trustabl/agent-reliability-analyzer";
 const defaultLog = (msg) => process.stderr.write(`[agent-reliability-skills] ${msg}\n`);
+// Node's fetch reports no network as "fetch failed" and keeps the reason in err.cause.
+const reasonOf = (err) => (err.cause?.message ? `${err.message}: ${err.cause.message}` : err.message);
 
 /** linux/darwin/windows + amd64/arm64, matching the release asset matrix. */
 export function platformTarget(platform = process.platform, arch = process.arch) {
@@ -127,7 +130,12 @@ export function createResolver({ env = process.env, home = os.homedir(), fetchIm
   }
 
   async function download(url, dest) {
-    const res = await fetchImpl(url, { headers: { ...ghHeaders(), Accept: "application/octet-stream" }, redirect: "follow" });
+    let res;
+    try {
+      res = await fetchImpl(url, { headers: { ...ghHeaders(), Accept: "application/octet-stream" }, redirect: "follow" });
+    } catch (err) {
+      throw new Error(`Could not download ${path.basename(dest)} (${reasonOf(err)}). Check your connection and retry.`);
+    }
     if (!res.ok) throw new Error(`Download failed (HTTP ${res.status}): ${url}`);
     fs.writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
   }
@@ -180,8 +188,9 @@ export function createResolver({ env = process.env, home = os.homedir(), fetchIm
       return override;
     }
 
+    // Unset means the version this server pins; "latest" asks for the newest release.
     const requested = setting(env.TRUSTABL_VERSION);
-    const pinned = requested && requested !== "latest" ? normalizeTag(requested) : undefined;
+    const pinned = requested === "latest" ? undefined : normalizeTag(requested ?? DEFAULT_ANALYZER_VERSION);
     if (pinned && !meetsMinimum(pinned)) {
       throw new Error(
         `TRUSTABL_VERSION is ${requested}, but Forge needs analyzer ${MIN_ANALYZER_VERSION} or later ` +
@@ -196,14 +205,14 @@ export function createResolver({ env = process.env, home = os.homedir(), fetchIm
       try {
         version = await latestTag();
       } catch (err) {
-        // Offline (or rate-limited) with the default "latest": a verified
-        // cached binary beats failing. Only a pinned version skips the lookup.
-        const reason = err.cause?.message ? `${err.message}: ${err.cause.message}` : err.message;
+        // Offline (or rate-limited) with "latest": a verified cached binary
+        // beats failing. A pinned version (the default) skips the lookup.
+        const reason = reasonOf(err);
         const cached = newestCached(cacheRoot, target.exe);
         if (!cached) {
           throw new Error(
             `Could not look up the latest trustabl release (${reason}), and no usable trustabl is cached in ${cacheRoot}. ` +
-              `Check your connection and retry, or set TRUSTABL_VERSION to a tag (e.g. v${MIN_ANALYZER_VERSION}) to pin a version. ` +
+              `Check your connection and retry, or unset TRUSTABL_VERSION (or set it to a tag, e.g. v${DEFAULT_ANALYZER_VERSION}) to pin a version. ` +
               `If you are rate-limited, set GITHUB_TOKEN.`,
           );
         }

@@ -3,6 +3,13 @@
 // so the resolver refuses it up front with a message that says why.
 export const MIN_ANALYZER_VERSION = "0.1.14";
 
+// The analyzer release this server runs when TRUSTABL_VERSION is not set: an
+// exact pin, so every install of one server version runs the same analyzer.
+// TRUSTABL_VERSION still overrides it (a tag, or "latest" for the newest
+// release). .github/workflows/engine-bump.yml proposes a bump when the
+// analyzer releases.
+export const DEFAULT_ANALYZER_VERSION = "0.1.16";
+
 function parse(tag) {
   const m = /^v?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$/.exec(tag.trim());
   if (!m) return null;

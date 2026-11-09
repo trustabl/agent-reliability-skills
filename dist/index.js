@@ -21812,6 +21812,7 @@ var setting = (value) => {
 
 // version.js
 var MIN_ANALYZER_VERSION = "0.1.14";
+var DEFAULT_ANALYZER_VERSION = "0.1.16";
 function parse3(tag) {
   const m = /^v?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$/.exec(tag.trim());
   if (!m) return null;
@@ -21840,6 +21841,7 @@ var normalizeTag = (value) => /^\d/.test(value) ? `v${value}` : value;
 var REPO = "trustabl/agent-reliability-analyzer";
 var defaultLog = (msg) => process.stderr.write(`[agent-reliability-skills] ${msg}
 `);
+var reasonOf = (err) => err.cause?.message ? `${err.message}: ${err.cause.message}` : err.message;
 function platformTarget(platform = process.platform, arch = process.arch) {
   const osName = { linux: "linux", darwin: "darwin", win32: "windows" }[platform];
   if (!osName) throw new Error(`Unsupported OS: ${platform}`);
@@ -21907,7 +21909,12 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
     return usable.length ? usable[usable.length - 1] : null;
   }
   async function download(url, dest) {
-    const res = await fetchImpl(url, { headers: { ...ghHeaders(), Accept: "application/octet-stream" }, redirect: "follow" });
+    let res;
+    try {
+      res = await fetchImpl(url, { headers: { ...ghHeaders(), Accept: "application/octet-stream" }, redirect: "follow" });
+    } catch (err) {
+      throw new Error(`Could not download ${path3.basename(dest)} (${reasonOf(err)}). Check your connection and retry.`);
+    }
     if (!res.ok) throw new Error(`Download failed (HTTP ${res.status}): ${url}`);
     fs3.writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
   }
@@ -21955,7 +21962,7 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
       return override;
     }
     const requested = setting(env.TRUSTABL_VERSION);
-    const pinned = requested && requested !== "latest" ? normalizeTag(requested) : void 0;
+    const pinned = requested === "latest" ? void 0 : normalizeTag(requested ?? DEFAULT_ANALYZER_VERSION);
     if (pinned && !meetsMinimum(pinned)) {
       throw new Error(
         `TRUSTABL_VERSION is ${requested}, but Forge needs analyzer ${MIN_ANALYZER_VERSION} or later (earlier releases lack trustabl forge --lang). Set it to v${MIN_ANALYZER_VERSION} or newer, or to "latest".`
@@ -21968,11 +21975,11 @@ function createResolver({ env = process.env, home = os.homedir(), fetchImpl = gl
       try {
         version2 = await latestTag();
       } catch (err) {
-        const reason = err.cause?.message ? `${err.message}: ${err.cause.message}` : err.message;
+        const reason = reasonOf(err);
         const cached2 = newestCached(cacheRoot, target.exe);
         if (!cached2) {
           throw new Error(
-            `Could not look up the latest trustabl release (${reason}), and no usable trustabl is cached in ${cacheRoot}. Check your connection and retry, or set TRUSTABL_VERSION to a tag (e.g. v${MIN_ANALYZER_VERSION}) to pin a version. If you are rate-limited, set GITHUB_TOKEN.`
+            `Could not look up the latest trustabl release (${reason}), and no usable trustabl is cached in ${cacheRoot}. Check your connection and retry, or unset TRUSTABL_VERSION (or set it to a tag, e.g. v${DEFAULT_ANALYZER_VERSION}) to pin a version. If you are rate-limited, set GITHUB_TOKEN.`
           );
         }
         log2(`could not reach GitHub (${reason}); using cached trustabl ${cached2}`);

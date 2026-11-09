@@ -6,8 +6,9 @@
 //     file, and refuses a path outside the repository;
 //   - a repository with no agent SDK gets the MCP advice to pass `policy`;
 //   - TRUSTABL_VERSION pins the analyzer release, and too old a pin is refused;
-//   - with the network blocked, a warm cache still generates the skill, and a
-//     cold cache says what is wrong.
+//   - with the network blocked, a warm cache still generates the skill (for the
+//     pinned default, a pinned tag and "latest"), and a cold cache says what is
+//     wrong.
 // Needs network for the downloads. Set GITHUB_TOKEN in CI to stay under
 // GitHub's anonymous rate limit.
 import { spawnSync } from "node:child_process";
@@ -34,7 +35,8 @@ const tmp = (name) => {
   return d;
 };
 
-// A home and cache of its own, so the run starts with nothing cached.
+// A home and cache of its own, so the run starts with nothing cached. The
+// caller's TRUSTABL_* settings are dropped; those in extra are kept.
 function homeEnv(home, extra = {}) {
   const env = {
     ...process.env,
@@ -42,11 +44,10 @@ function homeEnv(home, extra = {}) {
     USERPROFILE: home,
     LOCALAPPDATA: path.join(home, "AppData", "Local"),
     XDG_CACHE_HOME: path.join(home, ".cache"),
-    ...extra,
   };
   delete env.TRUSTABL_BIN;
   delete env.TRUSTABL_VERSION;
-  return env;
+  return { ...env, ...extra };
 }
 
 function check(cond, msg) {
@@ -192,8 +193,19 @@ try {
   // 5. Offline. The cache is warm from the runs above.
   proxy = await refusingProxy();
   {
+    // The pinned default was installed by steps 1 and 2, so the binary needs
+    // no network at all.
     const { client } = await start({ serverPath, env: offlineEnv(home, proxy.url) });
     const res = await client.call({ path: fixture });
+    check(proxy.hosts.includes("github.com:443"), "offline: the analyzer's rules fetch went to the blocking proxy");
+    check(!res.isError, `offline: a warm cache still generates the skill${res.isError ? ` (${text(res)})` : ""}`);
+    check(stampedSdks(res.content[1]?.text)?.includes("claude_sdk"), "offline: the skill is stamped with claude_sdk");
+    check(!client.stderr.includes("downloading"), "offline: the pinned default runs from the cache");
+    client.close();
+
+    // "latest" looks the release up, cannot, and falls back to the cache.
+    const { client: latest } = await start({ serverPath, env: offlineEnv(home, proxy.url, { TRUSTABL_VERSION: "latest" }) });
+    const latestRes = await latest.call({ path: fixture });
     // Node's fetch honors the proxy variables only from Node 22.21 and 24.0
     // (NODE_USE_ENV_PROXY). On an older Node the server's lookup bypasses the
     // proxy, reaches GitHub, and nothing here is offline.
@@ -202,11 +214,9 @@ try {
       `offline: the server's GitHub lookup went to the blocking proxy (Node ${process.version}; needs 22.21 or later); ` +
         `seen: ${[...new Set(proxy.hosts)].join(", ") || "none"}`,
     );
-    check(proxy.hosts.includes("github.com:443"), "offline: the analyzer's rules fetch went to the blocking proxy");
-    check(!res.isError, `offline: a warm cache still generates the skill${res.isError ? ` (${text(res)})` : ""}`);
-    check(stampedSdks(res.content[1]?.text)?.includes("claude_sdk"), "offline: the skill is stamped with claude_sdk");
-    check(client.stderr.includes("could not reach GitHub"), "offline: the server says it used the cached analyzer");
-    client.close();
+    check(!latestRes.isError, `offline: latest with a warm cache generates the skill${latestRes.isError ? ` (${text(latestRes)})` : ""}`);
+    check(latest.stderr.includes("could not reach GitHub"), "offline: latest says it used the cached analyzer");
+    latest.close();
 
     const { client: pinned } = await start({ serverPath, env: offlineEnv(home, proxy.url, { TRUSTABL_VERSION: PINNED }) });
     const pinnedRes = await pinned.call({ path: fixture });
@@ -215,8 +225,13 @@ try {
 
     const { client: cold } = await start({ serverPath, env: offlineEnv(tmp("cold-home"), proxy.url) });
     const coldRes = await cold.call({ path: fixture });
-    check(coldRes.isError && /no usable trustabl is cached/.test(text(coldRes)), "offline: a cold cache explains that nothing is cached");
+    check(coldRes.isError && /Could not download trustabl_/.test(text(coldRes)), "offline: a cold cache says the pinned analyzer could not be downloaded");
     cold.close();
+
+    const { client: coldLatest } = await start({ serverPath, env: offlineEnv(tmp("cold-home-latest"), proxy.url, { TRUSTABL_VERSION: "latest" }) });
+    const coldLatestRes = await coldLatest.call({ path: fixture });
+    check(coldLatestRes.isError && /no usable trustabl is cached/.test(text(coldLatestRes)), "offline: latest with a cold cache explains that nothing is cached");
+    coldLatest.close();
   }
 
   console.log("integration test passed");
