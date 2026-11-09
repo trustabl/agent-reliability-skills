@@ -25,7 +25,7 @@ prints `TRUSTABL_BIN=<path>`. Later runs only check the version, so run it at th
 Forge. Tell the user what it downloads the first time. If the user already has `trustabl` 0.1.14 or later on `PATH` (`trustabl version`), use that instead.
 
 ```bash
-V=0.1.15; D="$HOME/.trustabl/cli/v$V"
+V=0.1.16; D="$HOME/.trustabl/cli/v$V"
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) OS=windows; EXT=zip; EXE=trustabl.exe ;; Darwin) OS=darwin; EXT=tar.gz; EXE=trustabl ;; *) OS=linux; EXT=tar.gz; EXE=trustabl ;; esac
 case "$(uname -m)" in arm64|aarch64) ARCH=arm64 ;; *) ARCH=amd64 ;; esac; [ "$OS" = windows ] && ARCH=amd64
 TRUSTABL_BIN="$D/$EXE"
