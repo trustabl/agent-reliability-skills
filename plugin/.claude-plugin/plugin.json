@@ -1,7 +1,7 @@
 {
   "name": "agent-reliability-skills",
   "displayName": "agent-reliability-skills",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "description": "Generates a pre-coding reliability skill (SKILL.md) for your agent repository from Trustabl's detection rules.",
   "homepage": "https://trustabl.ai",
   "repository": "https://github.com/trustabl/agent-reliability-skills",
