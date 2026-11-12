@@ -13,7 +13,7 @@ name: Download history
 
 on:
   schedule:
-    - cron: '0 5 * * 1'       # weekly, Mondays 05:00 UTC
+    - cron: '0 16 * * 0'      # weekly, Monday 00:00 Philippine time (UTC+8) = Sunday 16:00 UTC
   workflow_dispatch:           # run on demand to add an entry now
 
 permissions:
@@ -69,7 +69,7 @@ jobs:
                   break
               page += 1
 
-          day = datetime.date.today().isoformat()   # YYYY-MM-DD (UTC on the runner)
+          day = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).date().isoformat()   # Philippine date, like the analyzer
 
           if os.path.exists(path):
               with open(path) as f:
