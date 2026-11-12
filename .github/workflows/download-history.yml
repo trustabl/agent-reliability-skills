@@ -32,14 +32,12 @@ jobs:
           TARGET_REPO: ${{ github.repository }}
           HISTORY_FILE: .github/stats/download-history.json
           # Only the package file is an install; checksums.txt downloads are not.
-          PACKAGE_PREFIX: agent-reliability-skills-
         run: |
           python3 - <<'PY'
           import datetime, json, os, urllib.request
 
           repo   = os.environ["TARGET_REPO"]
           path   = os.environ["HISTORY_FILE"]
-          prefix = os.environ["PACKAGE_PREFIX"]
           token  = os.environ.get("GITHUB_TOKEN", "")
 
           def api(url):
