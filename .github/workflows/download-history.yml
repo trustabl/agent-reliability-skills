@@ -60,10 +60,8 @@ jobs:
               for rel in rels:
                   if rel.get("draft"):
                       continue
-                  releases[rel["tag_name"]] = sum(
-                      a.get("download_count", 0)
-                      for a in rel.get("assets", [])
-                      if a.get("name", "").startswith(prefix) and a["name"].endswith(".tgz")
+                  releases[rel["tag_name"]] = sum(   # every release file: GitHub's own download total
+                      a.get("download_count", 0) for a in rel.get("assets", [])
                   )
               if len(rels) < 100:
                   break
@@ -88,7 +86,7 @@ jobs:
           out = {
               "repo": repo,
               "unit": "cumulative_release_downloads",
-              "note": "Downloads of the release package file, not users. Includes automated installs such as CI.",
+              "note": "GitHub release downloads (download_count summed over every release file), not users. Includes automated installs such as CI. Points before 16 Nov 2026 counted the .tgz package only.",
               "history": [hist[d] for d in sorted(hist)],
           }
 
@@ -96,7 +94,7 @@ jobs:
           with open(path, "w") as f:
               json.dump(out, f, indent=2)
               f.write("\n")
-          print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
+          print("%s: %s = %d cumulative release downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
           PY
 
       # main requires PRs on the analyzer; here it does not yet, but the snapshot
