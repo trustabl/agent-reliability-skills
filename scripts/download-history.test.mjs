@@ -34,7 +34,13 @@ class FakeDate(datetime.date):
     def today(cls):
         return datetime.date.fromisoformat(os.environ["FAKE_TODAY"])
 
+class FakeDateTime(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return datetime.datetime.fromisoformat(os.environ["FAKE_TODAY"] + "T12:00:00").replace(tzinfo=tz)
+
 datetime.date = FakeDate
+datetime.datetime = FakeDateTime
 
 def fake_urlopen(req, timeout=None):
     url = req.full_url
@@ -97,15 +103,15 @@ const PAGE = [
   release("v0.0.9", [asset("other-0.0.9.tgz", 12)]),
 ];
 
-test("counts only the package file, skips drafts, and labels the unit", { skip: !python }, () => {
+test("counts every release file (GitHub's total), skips drafts, and labels the unit", { skip: !python }, () => {
   const { history, stdout } = snapshot(tmp(), { pages: [PAGE], today: "2026-10-26" });
   assert.equal(history.repo, "trustabl/agent-reliability-skills");
   assert.equal(history.unit, "cumulative_release_downloads");
   assert.match(history.note, /not users/);
   assert.deepEqual(history.history, [
-    { date: "2026-10-26", downloads: 37, releases: { "v0.0.9": 0, "v0.1.0": 30, "v0.1.1": 7 } },
+    { date: "2026-10-26", downloads: 193, releases: { "v0.0.9": 12, "v0.1.0": 124, "v0.1.1": 57 } },
   ]);
-  assert.match(stdout, /= 37 cumulative package downloads across 3 releases/);
+  assert.match(stdout, /= 193 cumulative release downloads across 3 releases/);
 });
 
 test("releases are listed in sorted tag order", { skip: !python }, () => {
@@ -128,9 +134,9 @@ test("earlier entries are kept unchanged and stay in date order", { skip: !pytho
   const { history } = snapshot(dir, { pages: [week2], today: "2026-11-02" });
   assert.deepEqual(
     history.history.map((e) => [e.date, e.downloads]),
-    [["2026-10-26", 37], ["2026-11-02", 55]],
+    [["2026-10-26", 193], ["2026-11-02", 55]],
   );
-  assert.deepEqual(history.history[0].releases, { "v0.0.9": 0, "v0.1.0": 30, "v0.1.1": 7 });
+  assert.deepEqual(history.history[0].releases, { "v0.0.9": 12, "v0.1.0": 124, "v0.1.1": 57 });
 });
 
 test("reads every page of releases", { skip: !python }, () => {

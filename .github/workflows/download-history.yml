@@ -13,7 +13,7 @@ name: Download history
 
 on:
   schedule:
-    - cron: '0 5 * * 1'       # weekly, Mondays 05:00 UTC
+    - cron: '0 16 * * 0'      # weekly, Monday 00:00 Philippine time (UTC+8) = Sunday 16:00 UTC
   workflow_dispatch:           # run on demand to add an entry now
 
 permissions:
@@ -32,14 +32,12 @@ jobs:
           TARGET_REPO: ${{ github.repository }}
           HISTORY_FILE: .github/stats/download-history.json
           # Only the package file is an install; checksums.txt downloads are not.
-          PACKAGE_PREFIX: agent-reliability-skills-
         run: |
           python3 - <<'PY'
           import datetime, json, os, urllib.request
 
           repo   = os.environ["TARGET_REPO"]
           path   = os.environ["HISTORY_FILE"]
-          prefix = os.environ["PACKAGE_PREFIX"]
           token  = os.environ.get("GITHUB_TOKEN", "")
 
           def api(url):
@@ -60,16 +58,14 @@ jobs:
               for rel in rels:
                   if rel.get("draft"):
                       continue
-                  releases[rel["tag_name"]] = sum(
-                      a.get("download_count", 0)
-                      for a in rel.get("assets", [])
-                      if a.get("name", "").startswith(prefix) and a["name"].endswith(".tgz")
+                  releases[rel["tag_name"]] = sum(   # every release file: GitHub's own download total
+                      a.get("download_count", 0) for a in rel.get("assets", [])
                   )
               if len(rels) < 100:
                   break
               page += 1
 
-          day = datetime.date.today().isoformat()   # YYYY-MM-DD (UTC on the runner)
+          day = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).date().isoformat()   # Philippine date, like the analyzer
 
           if os.path.exists(path):
               with open(path) as f:
@@ -88,7 +84,7 @@ jobs:
           out = {
               "repo": repo,
               "unit": "cumulative_release_downloads",
-              "note": "Downloads of the release package file, not users. Includes automated installs such as CI.",
+              "note": "GitHub release downloads (download_count summed over every release file), not users. Includes automated installs such as CI. Points before 16 Nov 2026 counted the .tgz package only.",
               "history": [hist[d] for d in sorted(hist)],
           }
 
@@ -96,7 +92,7 @@ jobs:
           with open(path, "w") as f:
               json.dump(out, f, indent=2)
               f.write("\n")
-          print("%s: %s = %d cumulative package downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
+          print("%s: %s = %d cumulative release downloads across %d releases" % (day, repo, out["history"][-1]["downloads"], len(releases)))
           PY
 
       # main requires PRs on the analyzer; here it does not yet, but the snapshot
