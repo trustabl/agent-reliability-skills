@@ -1,7 +1,7 @@
 {
   "repo": "trustabl/agent-reliability-skills",
   "unit": "cumulative_release_downloads",
-  "note": "Downloads of the release package file, not users. Includes automated installs such as CI.",
+  "note": "GitHub release downloads (download_count summed over every release file), not users. Includes automated installs such as CI. Points before 16 Nov 2026 counted the .tgz package only.",
   "history": [
     {
       "date": "2026-11-04",
@@ -15,6 +15,15 @@
       "downloads": 3,
       "releases": {
         "v0.1.0-rc.1": 3
+      }
+    },
+    {
+      "date": "2026-11-16",
+      "downloads": 49,
+      "releases": {
+        "v0.1.0-rc.1": 4,
+        "v0.1.0-rc.2": 18,
+        "v0.1.0-rc.3": 27
       }
     }
   ]
