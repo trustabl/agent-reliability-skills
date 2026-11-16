@@ -98,6 +98,12 @@ Each release attaches `agent-reliability-skills-<version>.tgz` and `checksums.tx
 downloads the `.tgz`, so GitHub counts it. pending. A weekly workflow records the counts in
 `.github/stats/download-history.json`. They are downloads, not users, and include automated installs such as CI.
 
+## Star history
+
+<a href="https://www.star-history.com/#trustabl/agent-reliability-skills&Date">
+  <img src="https://api.star-history.com/svg?repos=trustabl/agent-reliability-skills&type=Date" alt="GitHub stars over time for trustabl/agent-reliability-skills">
+</a>
+
 ## Releasing
 
 1. In one pull request, set `version` in `package.json`, update the release URLs in this README and `mcp.json`
