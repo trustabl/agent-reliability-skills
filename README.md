@@ -61,13 +61,13 @@ Pydantic AI, the Vercel AI SDK and AutoGen.
   </sub>
 </p>
 
+---
+
 <p align="center">
   <a href="https://www.star-history.com/#trustabl/agent-reliability-skills&Date">
     <img src="https://api.star-history.com/svg?repos=trustabl/agent-reliability-skills&type=Date" alt="GitHub stars over time for trustabl/agent-reliability-skills" width="800">
   </a>
 </p>
-
----
 
 ## Install
 
