@@ -14,9 +14,58 @@ and Trustabl's rules change.
 Supported SDKs include the Claude Agent SDK, OpenAI Agents SDK, Google ADK, MCP, LangChain and LangGraph, CrewAI,
 Pydantic AI, the Vercel AI SDK and AutoGen.
 
+---
+
+<a id="trustabl-partners"></a>
+<h2 align="center">Trustabl partners — install from the catalogue you already use</h2>
+<p align="center">
+  <sub>One reliability skill generator, six front doors.</sub>
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="200">
+      <a href="https://registry.modelcontextprotocol.io/?q=agent-reliability-skills"><b>MCP Registry</b></a> &middot;
+      <a href="https://www.npmjs.com/package/@trustabl/agent-reliability-skills"><b>npm</b></a><br>
+      <sub>Generate the skill from<br>any MCP-aware client</sub>
+    </td>
+    <td align="center" width="200">
+      <a href="claude-plugin/README.md"><b>Claude Code</b></a><br>
+      <sub>Plugin: Claude writes the<br>skill before it writes code</sub>
+    </td>
+    <td align="center" width="200">
+      <a href="#claude-desktop"><b>Claude Desktop</b></a><br>
+      <sub>Name the repository,<br>get its skill</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://cursor.directory/plugins/agent-reliability-skills"><b>Cursor</b></a><br>
+      <sub>Same skill, wired in<br>as an MCP server</sub>
+    </td>
+    <td align="center">
+      <a href="https://pypi.org/project/pydantic-ai-agent-reliability-skills/"><b>PyPI</b></a><br>
+      <sub>A tool your<br>Pydantic AI agent calls</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/trustabl/agent-reliability-analyzer/releases"><b>CLI</b></a><br>
+      <sub><code>trustabl forge</code> via Homebrew,<br>Scoop, Docker or a binary</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <sub>
+    Every one of these generates the same skill on your own machine.<br>
+    Scanning agent code instead? <a href="https://github.com/trustabl/agent-reliability-analyzer#trustabl-partners">Agent Reliability Analyzer</a> has ten more front doors.
+  </sub>
+</p>
+
+---
+
 <p align="center">
   <a href="https://www.star-history.com/#trustabl/agent-reliability-skills&Date">
-    <img src="https://api.star-history.com/svg?repos=trustabl/agent-reliability-skills&type=Date" alt="GitHub stars over time for trustabl/agent-reliability-skills" width="600">
+    <img src="https://api.star-history.com/svg?repos=trustabl/agent-reliability-skills&type=Date" alt="GitHub stars over time for trustabl/agent-reliability-skills" width="800">
   </a>
 </p>
 
